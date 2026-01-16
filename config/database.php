@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => 'mysql', 
 
     /*jdbc:mysql://u42936_I0R78nxson:OCGkZ%40GO2PTm!eM7ZG9ccT.9@51.81.49.93:3306/s42936_basedepruebas
 
