@@ -1,15 +1,24 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CaptchaController; // Importamos tu nuevo controlador
+use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\DashboardController; // ¡Crearemos este controlador nuevo!
 
-// Ruta Principal (Usa la función 'index' del controlador)
-Route::get('/', [CaptchaController::class, 'index']);
+// 1. LA PUERTA (Login con Captcha)
+Route::get('/', [CaptchaController::class, 'showLogin'])->name('login');
+Route::post('/verificar-acceso', [CaptchaController::class, 'verifyLogin']);
 
-// Ruta Post (Usa la función 'store' del controlador)
-Route::post('/guardar-click', [CaptchaController::class, 'store']);
+// 2. EL DASHBOARD (Home)
+Route::get('/home', [DashboardController::class, 'index'])->name('home');
 
-// Ruta de Error 404 (Fallback)
+// 3. SECCIÓN CALCULADORA
+Route::get('/calculadora', [DashboardController::class, 'calculadora'])->name('calculadora');
+
+// 4. SECCIÓN CLICKER (Guardar en BD)
+Route::get('/clicker', [DashboardController::class, 'clicker'])->name('clicker');
+Route::post('/guardar-click', [DashboardController::class, 'storeClick'])->name('guardar.click');
+
+// Fallback
 Route::fallback(function () {
-    return view('404');
+    return redirect('/');
 });
