@@ -1,10 +1,12 @@
 @extends('layout')
 
+@section('breadcrumb', 'Calculadora')
+
 @section('content')
     <h2 class="text-2xl font-bold text-slate-800 mb-4">Calculadora</h2>
     
     <div class="bg-slate-800 p-4 rounded-lg mb-4 text-right">
-        <div id="display" class="text-white text-3xl font-mono overflow-hidden">0</div>
+        <div id="display" class="text-white text-3xl font-mono overflow-hidden tracking-widest h-10">0</div>
     </div>
 
     <div class="grid grid-cols-4 gap-2">
@@ -36,18 +38,25 @@
 
     <script>
         let currentDisplay = '0';
-        
+        const MAX_CHARS = 12; // 2. LÍMITE DE CARACTERES
+
         function updateDisplay() {
             document.getElementById('display').innerText = currentDisplay;
         }
 
         function appendNumber(num) {
+            // Validación: Si llegamos al límite, no hacemos nada
+            if (currentDisplay.length >= MAX_CHARS) return;
+
             if (currentDisplay === '0') currentDisplay = num;
             else currentDisplay += num;
             updateDisplay();
         }
 
         function appendOperator(op) {
+            // Validación: Dejar espacio para operador y al menos un número más
+            if (currentDisplay.length >= MAX_CHARS - 2) return;
+            
             currentDisplay += ' ' + op + ' ';
             updateDisplay();
         }
@@ -59,8 +68,14 @@
 
         function calculate() {
             try {
-                // Eval es peligroso en producción real, pero para práctica está bien
-                currentDisplay = eval(currentDisplay).toString(); 
+                // Evaluamos y cortamos si el resultado es muy largo (ej: decimales infinitos)
+                let result = eval(currentDisplay).toString();
+                
+                if (result.length > MAX_CHARS) {
+                    result = result.substring(0, MAX_CHARS);
+                }
+                
+                currentDisplay = result;
             } catch (e) {
                 currentDisplay = 'Error';
             }
