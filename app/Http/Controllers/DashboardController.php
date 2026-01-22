@@ -7,27 +7,32 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    // Muestra el menú principal
+    // 1. Muestra el menú principal (Home)
     public function index()
     {
         return view('dashboard.home');
     }
 
-    // Muestra la calculadora
+    // 2. Muestra la calculadora
     public function calculadora()
     {
         return view('dashboard.calculadora');
     }
 
-    // Muestra la sección del click
+    // 3. Muestra la sección del clicker
     public function clicker()
     {
-        // Contamos cuántos clicks llevamos en total para mostrarlo
-        $totalClicks = DB::table('click_tests')->count();
+        // Si la tabla no existe aún, esto podría dar error, pero asumimos que ya migraste
+        try {
+            $totalClicks = DB::table('click_tests')->count();
+        } catch (\Exception $e) {
+            $totalClicks = 0;
+        }
+        
         return view('dashboard.clicker', ['total' => $totalClicks]);
     }
 
-    // Guarda el click en la BD
+    // 4. Guarda el click en la BD
     public function storeClick()
     {
         DB::table('click_tests')->insert([
@@ -36,5 +41,19 @@ class DashboardController extends Controller
         ]);
 
         return back()->with('success', '¡Click guardado exitosamente!');
+    }
+
+    // === AQUÍ ESTABAN LOS MÉTODOS QUE FALTABAN ===
+
+    // 5. Muestra el carrusel
+    public function carrusel()
+    {
+        return view('dashboard.carrusel');
+    }
+
+    // 6. Muestra la página de error demo
+    public function errorDemo()
+    {
+        return view('dashboard.error-demo');
     }
 }
