@@ -26,6 +26,10 @@ Route::get('/carrusel', [DashboardController::class, 'carrusel'])->name('carruse
 // 6. SECCIÓN ERROR (Demo)
 Route::get('/error-demo', [DashboardController::class, 'errorDemo'])->name('error.demo');
 
+// 7. SECCIÓN FORMULARIO AVANZADO
+Route::get('/formulario', [DashboardController::class, 'formulario'])->name('formulario');
+Route::post('/validar-formulario', [DashboardController::class, 'validarFormulario'])->name('formulario.validar');
+
 // ===================================
 
 // Fallback (Si la ruta no existe, manda al login)

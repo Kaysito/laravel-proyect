@@ -22,7 +22,6 @@ class DashboardController extends Controller
     // 3. Muestra la sección del clicker
     public function clicker()
     {
-        // Si la tabla no existe aún, esto podría dar error, pero asumimos que ya migraste
         try {
             $totalClicks = DB::table('click_tests')->count();
         } catch (\Exception $e) {
@@ -43,8 +42,6 @@ class DashboardController extends Controller
         return back()->with('success', '¡Click guardado exitosamente!');
     }
 
-    // === AQUÍ ESTABAN LOS MÉTODOS QUE FALTABAN ===
-
     // 5. Muestra el carrusel
     public function carrusel()
     {
@@ -55,5 +52,29 @@ class DashboardController extends Controller
     public function errorDemo()
     {
         return view('dashboard.error-demo');
+    }
+
+    // === NUEVOS MÉTODOS PARA EL FORMULARIO ===
+
+    // 7. Muestra la vista del formulario
+    public function formulario()
+    {
+        return view('dashboard.formulario');
+    }
+
+    // 8. Procesa y valida los datos (Sin base de datos)
+    public function validarFormulario(Request $request)
+    {
+        // VALIDACIÓN STRICTA (Back-end)
+        $validated = $request->validate([
+            'nombre' => 'required|string|min:3|max:50',
+            'email'  => 'required|email:rfc,dns',
+            'edad'   => 'required|integer|min:18|max:100',
+            'fecha_nacimiento' => 'required|date|before:today',
+            'sitio_web' => 'nullable|url',
+            'mensaje' => 'required|string|max:255',
+        ]);
+
+        return back()->with('success', '¡Formulario enviado y validado perfectamente! Datos limpios recibidos.');
     }
 }

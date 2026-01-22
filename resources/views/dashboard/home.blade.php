@@ -38,6 +38,18 @@
             <p class="text-xs text-slate-500 mt-1">Simulación 404/500</p>
         </a>
 
+        <a href="{{ route('formulario') }}" class="col-span-2 group block p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-600 transition-all cursor-pointer">
+            <div class="flex items-center justify-center gap-4">
+                <div class="text-blue-600 text-3xl group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div class="text-left">
+                    <h3 class="font-bold text-slate-700">Formulario Pro</h3>
+                    <p class="text-xs text-slate-500 mt-1">Validación estricta y UX avanzada</p>
+                </div>
+            </div>
+        </a>
+
     </div>
 
     <div class="mt-8">
