@@ -1,5 +1,7 @@
 @extends('layout')
 
+@section('breadcrumb', 'Zona Clicker')
+
 @section('content')
     <div class="mb-6">
         <div class="inline-block p-3 rounded-full bg-indigo-100 text-indigo-600 mb-4">
