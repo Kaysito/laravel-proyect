@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+// 1. IMPORTANTE: Importamos la librería de Cloudinary
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class DashboardController extends Controller
 {
@@ -42,10 +44,25 @@ class DashboardController extends Controller
         return back()->with('success', '¡Click guardado exitosamente!');
     }
 
-    // 5. Muestra el carrusel
+    // 5. Muestra el carrusel (CONECTADO A CLOUDINARY)
     public function carrusel()
     {
-        return view('dashboard.carrusel');
+        // Intentamos obtener las imágenes con la etiqueta 'carrusel'
+        try {
+            $search = Cloudinary::search()
+                ->expression('tags=carrusel')
+                ->withField('context')
+                ->sortBy('created_at', 'desc') // Ordenamos por las más nuevas
+                ->maxResults(10)
+                ->execute();
+
+            $imagenes = $search['resources'];
+        } catch (\Exception $e) {
+            // Si falla (o no hay internet/claves), enviamos una lista vacía
+            $imagenes = [];
+        }
+
+        return view('dashboard.carrusel', ['imagenes' => $imagenes]);
     }
 
     // 6. Muestra la página de error demo
@@ -54,7 +71,7 @@ class DashboardController extends Controller
         return view('dashboard.error-demo');
     }
 
-    // === NUEVOS MÉTODOS PARA EL FORMULARIO ===
+    // === MÉTODOS PARA EL FORMULARIO ===
 
     // 7. Muestra la vista del formulario
     public function formulario()
@@ -62,11 +79,10 @@ class DashboardController extends Controller
         return view('dashboard.formulario');
     }
 
-    // 8. Procesa y valida los datos (Sin base de datos)
+    // 8. Procesa y valida los datos
     public function validarFormulario(Request $request)
     {
-        // VALIDACIÓN STRICTA (Back-end)
-        $validated = $request->validate([
+        $request->validate([
             'nombre' => 'required|string|min:3|max:50',
             'email'  => 'required|email:rfc,dns',
             'edad'   => 'required|integer|min:18|max:100',
@@ -75,6 +91,27 @@ class DashboardController extends Controller
             'mensaje' => 'required|string|max:255',
         ]);
 
-        return back()->with('success', '¡Formulario enviado y validado perfectamente! Datos limpios recibidos.');
+        return back()->with('success', '¡Formulario enviado y validado perfectamente!');
+    }
+
+    // === NUEVO MÉTODO PARA SUBIR FOTOS (CORREGIDO) ===
+
+    // 9. Sube una foto a Cloudinary
+    public function subirFoto(Request $request)
+    {
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        try {
+            // Subimos a Cloudinary y le ponemos la etiqueta 'carrusel'
+            Cloudinary::upload($request->file('imagen')->getRealPath())
+                ->withTag('carrusel'); // <--- CORREGIDO: Ya no tiene el ->upload() extra que daba error
+            
+            return back()->with('success', '¡Foto subida correctamente! Recarga si no la ves al instante.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al subir: ' . $e->getMessage());
+        }
     }
 }
