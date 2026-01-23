@@ -14,25 +14,25 @@ Route::get('/home', [DashboardController::class, 'index'])->name('home');
 // 3. SECCIÓN CALCULADORA
 Route::get('/calculadora', [DashboardController::class, 'calculadora'])->name('calculadora');
 
-// 4. SECCIÓN CLICKER (Guardar en BD)
+// 4. SECCIÓN CLICKER
 Route::get('/clicker', [DashboardController::class, 'clicker'])->name('clicker');
 Route::post('/guardar-click', [DashboardController::class, 'storeClick'])->name('guardar.click');
 
-// === AQUÍ ESTÁN LAS QUE FALTABAN ===
-
 // 5. SECCIÓN CARRUSEL (Galería)
 Route::get('/carrusel', [DashboardController::class, 'carrusel'])->name('carrusel');
+// --- ESTA ES LA QUE TE FALTA ---
+Route::post('/carrusel/subir', [DashboardController::class, 'subirFoto'])->name('carrusel.subir');
+// -------------------------------
 
 // 6. SECCIÓN ERROR (Demo)
 Route::get('/error-demo', [DashboardController::class, 'errorDemo'])->name('error.demo');
 
-// 7. SECCIÓN FORMULARIO AVANZADO
+// 7. SECCIÓN FORMULARIO
 Route::get('/formulario', [DashboardController::class, 'formulario'])->name('formulario');
 Route::post('/validar-formulario', [DashboardController::class, 'validarFormulario'])->name('formulario.validar');
 
-// ===================================
 
-// Fallback (Si la ruta no existe, manda al login)
+// Fallback
 Route::fallback(function () {
     return redirect('/');
 });
