@@ -8,24 +8,63 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class DashboardController extends Controller
 {
-    // ... (Tus funciones index, calculadora, clicker, storeClick siguen igual) ...
-    public function index() { return view('dashboard.home'); }
-    public function calculadora() { return view('dashboard.calculadora'); }
-    
-    public function clicker() {
-        try { $totalClicks = DB::table('click_tests')->count(); } catch (\Exception $e) { $totalClicks = 0; }
-        return view('dashboard.clicker', ['total' => $totalClicks]);
+    /* ===============================
+       VISTAS BÁSICAS
+    =============================== */
+
+    public function index()
+    {
+        return view('dashboard.home');
     }
 
-    public function storeClick() {
-        DB::table('click_tests')->insert(['created_at' => now(), 'updated_at' => now()]);
+    public function calculadora()
+    {
+        return view('dashboard.calculadora');
+    }
+
+    public function errorDemo()
+    {
+        return view('dashboard.error-demo');
+    }
+
+    public function formulario()
+    {
+        return view('dashboard.formulario');
+    }
+
+    /* ===============================
+       CLICKER
+    =============================== */
+
+    public function clicker()
+    {
+        try {
+            $totalClicks = DB::table('click_tests')->count();
+        } catch (\Exception $e) {
+            $totalClicks = 0;
+        }
+
+        return view('dashboard.clicker', [
+            'total' => $totalClicks
+        ]);
+    }
+
+    public function storeClick()
+    {
+        DB::table('click_tests')->insert([
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return back()->with('success', '¡Click guardado exitosamente!');
     }
 
-    public function errorDemo() { return view('dashboard.error-demo'); }
-    public function formulario() { return view('dashboard.formulario'); }
-    
-    public function validarFormulario(Request $request) {
+    /* ===============================
+       FORMULARIO
+    =============================== */
+
+    public function validarFormulario(Request $request)
+    {
         $request->validate([
             'nombre' => 'required|string|min:3|max:50',
             'email'  => 'required|email:rfc,dns',
@@ -34,33 +73,41 @@ class DashboardController extends Controller
             'sitio_web' => 'nullable|url',
             'mensaje' => 'required|string|max:255',
         ]);
-        return back()->with('success', '¡Formulario enviado y validado perfectamente!');
+
+        return back()->with('success', '¡Formulario enviado y validado correctamente!');
     }
 
-    // === AQUÍ ESTÁ EL CAMBIO IMPORTANTE (USANDO CARPETAS) ===
+    /* ===============================
+       CARRUSEL (LISTAR IMÁGENES)
+    =============================== */
 
-    // 5. Muestra el carrusel (BUSCA EN LA CARPETA 'carrusel')
     public function carrusel()
     {
         $imagenes = [];
+
         try {
-            // Buscamos explícitamente en la carpeta 'carrusel'
             $search = Cloudinary::search()
-                ->expression('folder:carrusel') // <--- CAMBIO AQUÍ
+                ->expression('folder:carrusel')
                 ->sortBy('created_at', 'desc')
-                ->maxResults(10)
+                ->maxResults(20)
                 ->execute();
 
             if (isset($search['resources'])) {
                 $imagenes = $search['resources'];
             }
         } catch (\Exception $e) {
-            // Si falla, $imagenes se queda vacío
+            // Si falla, se queda vacío
         }
-        return view('dashboard.carrusel', ['imagenes' => $imagenes]);
+
+        return view('dashboard.carrusel', [
+            'imagenes' => $imagenes
+        ]);
     }
 
-    // 9. Sube una foto a Cloudinary (A LA CARPETA 'carrusel')
+    /* ===============================
+       SUBIR FOTO A CLOUDINARY
+    =============================== */
+
     public function subirFoto(Request $request)
     {
         $request->validate([
@@ -68,17 +115,29 @@ class DashboardController extends Controller
         ]);
 
         try {
-            // Subimos la foto DIRECTO a una carpeta llamada "carrusel"
-            Cloudinary::upload($request->file('imagen')->getRealPath(), [
-                'folder' => 'carrusel', // <--- ESTO CREA LA CARPETA VISIBLE
-                'public_id' => 'foto_' . time() // Le damos un nombre único
-            ]);
-            
-            return back()->with('success', '¡Foto guardada en la carpeta "carrusel" de Cloudinary!');
+            $result = Cloudinary::upload(
+                $request->file('imagen')->getRealPath(),
+                [
+                    'folder' => 'carrusel',
+                    'public_id' => 'foto_' . uniqid(),
+                    'quality' => 'auto',
+                    'fetch_format' => 'auto',
+                ]
+            );
+
+            // URL segura (por si luego la quieres guardar en BD)
+            $url = $result->getSecurePath();
+
+            return back()->with(
+                'success',
+                '¡Imagen subida correctamente a Cloudinary!'
+            );
 
         } catch (\Exception $e) {
-            // ESTO TE DIRÁ POR QUÉ FALLA EN UN MENSAJE ROJO
-            return back()->with('error', 'Error crítico: ' . $e->getMessage());
+            return back()->with(
+                'error',
+                'Error al subir imagen: ' . $e->getMessage()
+            );
         }
     }
 }
