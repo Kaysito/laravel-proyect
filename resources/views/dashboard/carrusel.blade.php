@@ -3,93 +3,146 @@
 @section('breadcrumb', 'Galería de Imágenes')
 
 @section('content')
-    <h2 class="text-2xl font-bold text-slate-800 mb-4">Galería Dinámica</h2>
-
-    {{-- 1. MENSAJES DE ESTADO (Feedback) --}}
-    @if(session('success'))
-        <div class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded relative mb-4">
-            <i class="fa-solid fa-check-circle mr-2"></i>{{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-            <i class="fa-solid fa-triangle-exclamation mr-2"></i>{{ session('error') }}
-        </div>
-    @endif
-
-    {{-- 2. SECCIÓN DE VISUALIZACIÓN (RECIBIR FOTOS) --}}
-    <div class="relative w-full max-w-lg mx-auto overflow-hidden rounded-xl shadow-lg border border-slate-200 bg-slate-900 mb-8">
+    <div class="max-w-4xl mx-auto">
         
-        <div id="carousel-images" class="relative h-64">
-            {{-- Aquí preguntamos: ¿El controlador nos mandó fotos? --}}
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-slate-800">Galería Dinámica</h2>
+            <p class="text-slate-500 mt-2">Gestiona las imágenes de tu carrusel en la nube.</p>
+        </div>
+
+        {{-- 1. MENSAJES DE ESTADO --}}
+        @if(session('success'))
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-4 rounded shadow-sm mb-6 flex items-center animate-fade-in-down">
+                <i class="fa-solid fa-check-circle text-xl mr-3"></i>
+                <div>
+                    <p class="font-bold">¡Éxito!</p>
+                    <p class="text-sm">{{ session('success') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm mb-6 flex items-center animate-fade-in-down">
+                <i class="fa-solid fa-triangle-exclamation text-xl mr-3"></i>
+                <div>
+                    <p class="font-bold">Error</p>
+                    <p class="text-sm">{{ session('error') }}</p>
+                </div>
+            </div>
+        @endif
+
+        {{-- 2. EL CARRUSEL (VISUALIZACIÓN) --}}
+        <div class="relative w-full overflow-hidden rounded-2xl shadow-2xl border border-slate-200 bg-slate-900 mb-10 group">
+            
+            <div id="carousel-images" class="relative h-72 sm:h-96 bg-slate-800 flex items-center justify-center">
+                @if(isset($imagenes) && count($imagenes) > 0)
+                    @foreach($imagenes as $index => $img)
+                        <img src="{{ $img['secure_url'] }}" 
+                             class="absolute inset-0 w-full h-full object-contain bg-black/20 backdrop-blur-sm transition-opacity duration-700 ease-in-out {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}" 
+                             data-index="{{ $index }}"
+                             alt="Imagen del carrusel">
+                    @endforeach
+                @else
+                    {{-- Estado Vacío --}}
+                    <div class="text-center p-8">
+                        <div class="inline-block p-4 rounded-full bg-slate-700/50 mb-4">
+                            <i class="fa-regular fa-images text-4xl text-slate-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-slate-300">Sin imágenes</h3>
+                        <p class="text-slate-500 text-sm">Sube tu primera foto abajo para comenzar.</p>
+                    </div>
+                @endif
+
+                {{-- Gradiente para que se vean mejor las flechas --}}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+            </div>
+
+            {{-- Controles (Solo si hay fotos) --}}
             @if(isset($imagenes) && count($imagenes) > 0)
-                {{-- SI HAY FOTOS EN CLOUDINARY: Las recorremos una por una --}}
-                @foreach($imagenes as $index => $img)
-                    <img src="{{ $img['secure_url'] }}" 
-                         class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}" 
-                         data-index="{{ $index }}"
-                         alt="Foto de galería">
-                @endforeach
-            @else
-                {{-- SI NO HAY FOTOS: Mostramos las de prueba (Picsum) --}}
-                <img src="https://picsum.photos/800/400?random=1" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-100" data-index="0">
-                <img src="https://picsum.photos/800/400?random=2" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0" data-index="1">
+                <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition transform hover:scale-110 focus:outline-none group-hover:opacity-100 opacity-0 duration-300">
+                    <i class="fa-solid fa-chevron-left text-lg"></i>
+                </button>
+                <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition transform hover:scale-110 focus:outline-none group-hover:opacity-100 opacity-0 duration-300">
+                    <i class="fa-solid fa-chevron-right text-lg"></i>
+                </button>
+                
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                    @foreach($imagenes as $index => $img)
+                        <button onclick="goToSlide({{ $index }})" class="dot w-2.5 h-2.5 rounded-full transition-all duration-300 {{ $index === 0 ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80' }}"></button>
+                    @endforeach
+                </div>
             @endif
         </div>
 
-        {{-- Botones de Navegación --}}
-        <button onclick="prevSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10">
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <button onclick="nextSlide()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10">
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-        
-        {{-- Indicadores (Puntitos) --}}
-        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
-            @if(isset($imagenes) && count($imagenes) > 0)
-                @foreach($imagenes as $index => $img)
-                    <span class="dot w-3 h-3 rounded-full cursor-pointer {{ $index === 0 ? 'bg-white opacity-100' : 'bg-white/50' }}" onclick="goToSlide({{ $index }})"></span>
-                @endforeach
-            @else
-                <span class="dot w-3 h-3 bg-white rounded-full opacity-100 cursor-pointer" onclick="goToSlide(0)"></span>
-                <span class="dot w-3 h-3 bg-white/50 rounded-full cursor-pointer" onclick="goToSlide(1)"></span>
-            @endif
+        {{-- 3. ZONA DE CARGA (DISEÑO DRAG & DROP) --}}
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8">
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-bold text-slate-700 flex items-center justify-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    Subir Nueva Imagen
+                </h3>
+            </div>
+
+            <form id="uploadForm" action="{{ route('carrusel.subir') }}" method="POST" enctype="multipart/form-data" class="max-w-xl mx-auto">
+                @csrf
+                
+                {{-- Input estilizado --}}
+                <div class="flex items-center justify-center w-full mb-4">
+                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-48 border-2 border-indigo-200 border-dashed rounded-xl cursor-pointer bg-indigo-50/30 hover:bg-indigo-50 transition-colors duration-300 group">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-300 mb-3 group-hover:text-indigo-500 transition-colors"></i>
+                            <p class="mb-2 text-sm text-slate-500"><span class="font-semibold text-indigo-600">Haz clic para subir</span> o arrastra aquí</p>
+                            <p class="text-xs text-slate-400">PNG, JPG o WEBP (MAX. 2MB)</p>
+                        </div>
+                        
+                        {{-- Validamos en el front que solo acepte imágenes --}}
+                        <input id="dropzone-file" name="imagen" type="file" class="hidden" accept="image/png, image/jpeg, image/jpg, image/webp" required onchange="updateFileName(this)" />
+                    </label>
+                </div>
+
+                {{-- Nombre del archivo seleccionado (JS lo rellena) --}}
+                <div id="file-name-display" class="hidden mb-4 text-sm text-center text-emerald-600 font-medium bg-emerald-50 py-2 px-4 rounded-lg animate-pulse">
+                    <i class="fa-solid fa-image mr-2"></i> <span id="file-name-text"></span>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/30 active:scale-95 flex items-center justify-center gap-2">
+                    <span>Subir Imagen a la Nube</span> <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-10 text-center">
+            <a href="{{ route('home') }}" class="inline-flex items-center text-slate-400 hover:text-slate-600 transition-colors font-medium text-sm">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Volver al menú principal
+            </a>
         </div>
     </div>
 
-    {{-- 3. SECCIÓN DE CARGA (SUBIR FOTOS) - Esto es lo que me mostraste --}}
-    <div class="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center max-w-lg mx-auto">
-        <h3 class="font-bold text-slate-700 mb-2">
-            <i class="fa-solid fa-cloud-arrow-up text-indigo-500 mr-2"></i> Subir Nueva Foto
-        </h3>
-        <p class="text-xs text-slate-500 mb-4">La imagen se guardará en Cloudinary y aparecerá arriba.</p>
-
-        <form action="{{ route('carrusel.subir') }}" method="POST" enctype="multipart/form-data" class="flex flex-col items-center gap-4">
-            @csrf
-            
-            <input type="file" name="imagen" required accept="image/*" 
-                   class="block w-full text-sm text-slate-500 
-                          file:mr-4 file:py-2 file:px-4 
-                          file:rounded-full file:border-0 
-                          file:text-sm file:font-semibold 
-                          file:bg-indigo-50 file:text-indigo-700 
-                          hover:file:bg-indigo-100 cursor-pointer">
-            
-            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-md w-full sm:w-auto">
-                <i class="fa-solid fa-upload mr-2"></i> Subir Imagen
-            </button>
-        </form>
-    </div>
-
-    <div class="mt-8 text-center">
-        <a href="{{ route('home') }}" class="inline-block text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-arrow-left"></i> Volver al menú
-        </a>
-    </div>
-
-    {{-- 4. JAVASCRIPT DEL CARRUSEL --}}
+    {{-- LÓGICA JAVASCRIPT --}}
     <script>
+        // 1. Lógica Visual del Input File
+        function updateFileName(input) {
+            const display = document.getElementById('file-name-display');
+            const text = document.getElementById('file-name-text');
+            
+            if (input.files && input.files[0]) {
+                text.textContent = input.files[0].name; // Muestra el nombre
+                display.classList.remove('hidden'); // Hace visible el cuadrito verde
+            } else {
+                display.classList.add('hidden');
+            }
+        }
+
+        // 2. Feedback de Carga (Spinner)
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Subiendo...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            // No deshabilitamos el botón inmediatamente para permitir el submit, 
+            // pero visualmente parece bloqueado.
+        });
+
+        // 3. Lógica del Carrusel
         let currentIndex = 0;
         const images = document.querySelectorAll('#carousel-images img');
         const dots = document.querySelectorAll('.dot');
@@ -108,9 +161,13 @@
             });
 
             dots.forEach((dot, i) => {
-                dot.classList.toggle('opacity-100', i === currentIndex);
-                dot.classList.toggle('bg-white', i === currentIndex);
-                dot.classList.toggle('bg-white/50', i !== currentIndex);
+                if(i === currentIndex) {
+                    dot.classList.add('bg-white', 'w-6');
+                    dot.classList.remove('bg-white/50');
+                } else {
+                    dot.classList.remove('bg-white', 'w-6');
+                    dot.classList.add('bg-white/50');
+                }
             });
         }
 

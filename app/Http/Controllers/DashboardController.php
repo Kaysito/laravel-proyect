@@ -44,22 +44,30 @@ class DashboardController extends Controller
         return back()->with('success', '¡Click guardado exitosamente!');
     }
 
-    // 5. Muestra el carrusel (CONECTADO A CLOUDINARY)
+    // 5. Muestra el carrusel (BLINDADO CONTRA ERRORES)
     public function carrusel()
     {
-        // Intentamos obtener las imágenes con la etiqueta 'carrusel'
+        $imagenes = []; // Iniciamos vacío por seguridad
+
         try {
+            // Buscamos las imágenes con la etiqueta 'carrusel'
             $search = Cloudinary::search()
                 ->expression('tags=carrusel')
                 ->withField('context')
-                ->sortBy('created_at', 'desc') // Ordenamos por las más nuevas
+                ->sortBy('created_at', 'desc')
                 ->maxResults(10)
                 ->execute();
 
-            $imagenes = $search['resources'];
+            // CORRECCIÓN IMPORTANTE:
+            // Verificamos si Cloudinary nos devolvió algo válido antes de usarlo.
+            // Esto evita el error "Trying to access array offset on value of type null"
+            if (isset($search['resources'])) {
+                $imagenes = $search['resources'];
+            }
+
         } catch (\Exception $e) {
-            // Si falla (o no hay internet/claves), enviamos una lista vacía
-            $imagenes = [];
+            // Si falla la conexión, no hacemos nada y dejamos $imagenes vacío
+            // Así la página carga igual, solo que sin fotos.
         }
 
         return view('dashboard.carrusel', ['imagenes' => $imagenes]);
@@ -104,13 +112,14 @@ class DashboardController extends Controller
         ]);
 
         try {
-            // Subimos a Cloudinary y le ponemos la etiqueta 'carrusel'
+            // Subimos a Cloudinary y le pegamos la etiqueta 'carrusel'
             Cloudinary::upload($request->file('imagen')->getRealPath())
-                ->withTag('carrusel'); // <--- CORREGIDO: Ya no tiene el ->upload() extra que daba error
+                ->withTag('carrusel'); 
             
             return back()->with('success', '¡Foto subida correctamente! Recarga si no la ves al instante.');
 
         } catch (\Exception $e) {
+            // Si falla, mostramos el error exacto en pantalla roja
             return back()->with('error', 'Error al subir: ' . $e->getMessage());
         }
     }
