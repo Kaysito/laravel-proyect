@@ -5,23 +5,25 @@
 @section('content')
     <h2 class="text-2xl font-bold text-slate-800 mb-4">Galería Dinámica</h2>
 
+    {{-- 1. MENSAJES DE ESTADO (Feedback) --}}
     @if(session('success'))
         <div class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded relative mb-4">
             <i class="fa-solid fa-check-circle mr-2"></i>{{ session('success') }}
         </div>
     @endif
-
     @if(session('error'))
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             <i class="fa-solid fa-triangle-exclamation mr-2"></i>{{ session('error') }}
         </div>
     @endif
 
+    {{-- 2. SECCIÓN DE VISUALIZACIÓN (RECIBIR FOTOS) --}}
     <div class="relative w-full max-w-lg mx-auto overflow-hidden rounded-xl shadow-lg border border-slate-200 bg-slate-900 mb-8">
         
         <div id="carousel-images" class="relative h-64">
+            {{-- Aquí preguntamos: ¿El controlador nos mandó fotos? --}}
             @if(isset($imagenes) && count($imagenes) > 0)
-                {{-- CASO A: Hay fotos en Cloudinary --}}
+                {{-- SI HAY FOTOS EN CLOUDINARY: Las recorremos una por una --}}
                 @foreach($imagenes as $index => $img)
                     <img src="{{ $img['secure_url'] }}" 
                          class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}" 
@@ -29,13 +31,13 @@
                          alt="Foto de galería">
                 @endforeach
             @else
-                {{-- CASO B: No hay fotos, mostramos ejemplo --}}
+                {{-- SI NO HAY FOTOS: Mostramos las de prueba (Picsum) --}}
                 <img src="https://picsum.photos/800/400?random=1" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-100" data-index="0">
                 <img src="https://picsum.photos/800/400?random=2" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0" data-index="1">
-                <img src="https://picsum.photos/800/400?random=3" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0" data-index="2">
             @endif
         </div>
 
+        {{-- Botones de Navegación --}}
         <button onclick="prevSlide()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition z-10">
             <i class="fa-solid fa-chevron-left"></i>
         </button>
@@ -43,6 +45,7 @@
             <i class="fa-solid fa-chevron-right"></i>
         </button>
         
+        {{-- Indicadores (Puntitos) --}}
         <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
             @if(isset($imagenes) && count($imagenes) > 0)
                 @foreach($imagenes as $index => $img)
@@ -51,11 +54,11 @@
             @else
                 <span class="dot w-3 h-3 bg-white rounded-full opacity-100 cursor-pointer" onclick="goToSlide(0)"></span>
                 <span class="dot w-3 h-3 bg-white/50 rounded-full cursor-pointer" onclick="goToSlide(1)"></span>
-                <span class="dot w-3 h-3 bg-white/50 rounded-full cursor-pointer" onclick="goToSlide(2)"></span>
             @endif
         </div>
     </div>
 
+    {{-- 3. SECCIÓN DE CARGA (SUBIR FOTOS) - Esto es lo que me mostraste --}}
     <div class="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center max-w-lg mx-auto">
         <h3 class="font-bold text-slate-700 mb-2">
             <i class="fa-solid fa-cloud-arrow-up text-indigo-500 mr-2"></i> Subir Nueva Foto
@@ -85,6 +88,7 @@
         </a>
     </div>
 
+    {{-- 4. JAVASCRIPT DEL CARRUSEL --}}
     <script>
         let currentIndex = 0;
         const images = document.querySelectorAll('#carousel-images img');
@@ -94,18 +98,15 @@
         function showSlide(index) {
             if (totalImages === 0) return;
 
-            // Lógica cíclica (Infinito)
             if (index >= totalImages) currentIndex = 0;
             else if (index < 0) currentIndex = totalImages - 1;
             else currentIndex = index;
 
-            // Actualizar imágenes
             images.forEach((img, i) => {
                 img.classList.toggle('opacity-100', i === currentIndex);
                 img.classList.toggle('opacity-0', i !== currentIndex);
             });
 
-            // Actualizar puntitos
             dots.forEach((dot, i) => {
                 dot.classList.toggle('opacity-100', i === currentIndex);
                 dot.classList.toggle('bg-white', i === currentIndex);
@@ -117,7 +118,6 @@
         function prevSlide() { showSlide(currentIndex - 1); }
         function goToSlide(index) { showSlide(index); }
 
-        // Cambio automático solo si hay más de 1 imagen
         if(totalImages > 1) {
             setInterval(nextSlide, 5000);
         }
