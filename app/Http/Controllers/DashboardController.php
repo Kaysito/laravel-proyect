@@ -82,27 +82,33 @@ class DashboardController extends Controller
     =============================== */
 
     public function carrusel()
-    {
-        $imagenes = [];
+{
+    $imagenes = [];
 
-        try {
-            $search = Cloudinary::search()
-                ->expression('folder:carrusel')
-                ->sortBy('created_at', 'desc')
-                ->maxResults(20)
-                ->execute();
+    try {
+        $search = Cloudinary::search()
+            ->expression('folder:carrusel')
+            ->sortBy('created_at', 'desc')
+            ->maxResults(20)
+            ->execute();
 
-            if (isset($search['resources'])) {
-                $imagenes = $search['resources'];
-            }
-        } catch (\Exception $e) {
-            // Si falla, se queda vacío
+        // PROTECCIÓN TOTAL
+        if (
+            is_array($search) &&
+            array_key_exists('resources', $search) &&
+            is_array($search['resources'])
+        ) {
+            $imagenes = $search['resources'];
         }
 
-        return view('dashboard.carrusel', [
-            'imagenes' => $imagenes
-        ]);
+    } catch (\Exception $e) {
+        // Log opcional para Render
+        logger()->error('Cloudinary search error: ' . $e->getMessage());
     }
+
+    return view('dashboard.carrusel', compact('imagenes'));
+}
+
 
     /* ===============================
        SUBIR FOTO A CLOUDINARY
