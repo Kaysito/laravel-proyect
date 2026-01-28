@@ -82,33 +82,37 @@ class DashboardController extends Controller
     =============================== */
 
     public function carrusel()
-{
-    $imagenes = [];
+    {
+        $imagenes = [];
 
-    try {
-        $search = Cloudinary::search()
-            ->expression('folder:carrusel')
-            ->sortBy('created_at', 'desc')
-            ->maxResults(20)
-            ->execute();
+        try {
+            $search = Cloudinary::search()
+                ->expression('folder:carrusel')
+                ->sortBy('created_at', 'desc')
+                ->maxResults(20)
+                ->execute();
 
-        // PROTECCIÓN TOTAL
-        if (
-            is_array($search) &&
-            array_key_exists('resources', $search) &&
-            is_array($search['resources'])
-        ) {
-            $imagenes = $search['resources'];
+            // Compatible con array u objeto (Render / local)
+            if (
+                is_array($search) &&
+                isset($search['resources']) &&
+                is_array($search['resources'])
+            ) {
+                $imagenes = $search['resources'];
+            } elseif (
+                is_object($search) &&
+                method_exists($search, 'getArrayCopy')
+            ) {
+                $data = $search->getArrayCopy();
+                $imagenes = $data['resources'] ?? [];
+            }
+
+        } catch (\Exception $e) {
+            logger()->error('Cloudinary search error: ' . $e->getMessage());
         }
 
-    } catch (\Exception $e) {
-        // Log opcional para Render
-        logger()->error('Cloudinary search error: ' . $e->getMessage());
+        return view('dashboard.carrusel', compact('imagenes'));
     }
-
-    return view('dashboard.carrusel', compact('imagenes'));
-}
-
 
     /* ===============================
        SUBIR FOTO A CLOUDINARY
@@ -131,8 +135,9 @@ class DashboardController extends Controller
                 ]
             );
 
-            // URL segura (por si luego la quieres guardar en BD)
-            $url = $result->getSecurePath();
+            if (!$result || !method_exists($result, 'getSecurePath')) {
+                throw new \Exception('Respuesta inválida de Cloudinary');
+            }
 
             return back()->with(
                 'success',
@@ -140,9 +145,11 @@ class DashboardController extends Controller
             );
 
         } catch (\Exception $e) {
+            logger()->error('Cloudinary upload error: ' . $e->getMessage());
+
             return back()->with(
                 'error',
-                'Error al subir imagen: ' . $e->getMessage()
+                'Error al subir imagen'
             );
         }
     }
