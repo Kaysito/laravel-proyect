@@ -140,9 +140,10 @@ class DashboardController extends Controller
             }
 
             return back()->with(
-                'success',
-                '¡Imagen subida correctamente a Cloudinary!'
+                'error',
+                 'Error al subir imagen: ' . $e->getMessage()
             );
+
 
         } catch (\Exception $e) {
             logger()->error('Cloudinary upload error: ' . $e->getMessage());
