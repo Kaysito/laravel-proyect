@@ -92,22 +92,15 @@ class DashboardController extends Controller
                 ->maxResults(20)
                 ->execute();
 
-            // Compatible con array u objeto (Render / local)
-            if (
-                is_array($search) &&
-                isset($search['resources']) &&
-                is_array($search['resources'])
-            ) {
+            // Compatible local / Render
+            if (is_array($search) && isset($search['resources'])) {
                 $imagenes = $search['resources'];
-            } elseif (
-                is_object($search) &&
-                method_exists($search, 'getArrayCopy')
-            ) {
+            } elseif (is_object($search) && method_exists($search, 'getArrayCopy')) {
                 $data = $search->getArrayCopy();
                 $imagenes = $data['resources'] ?? [];
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             logger()->error('Cloudinary search error: ' . $e->getMessage());
         }
 
@@ -119,39 +112,34 @@ class DashboardController extends Controller
     =============================== */
 
     public function subirFoto(Request $request)
-{
-    $request->validate([
-        'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5048',
-    ]);
+    {
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5048',
+        ]);
 
-    try {
-        $result = Cloudinary::upload(
-            $request->file('imagen')->getRealPath(),
-            [
-                'folder' => 'carrusel',
-                'public_id' => 'foto_' . uniqid(),
-                'quality' => 'auto',
-                'fetch_format' => 'auto',
-            ]
-        );
+        try {
+            Cloudinary::uploadFile(
+                $request->file('imagen')->getRealPath(),
+                [
+                    'folder' => 'carrusel',
+                    'public_id' => 'foto_' . uniqid(),
+                    'quality' => 'auto',
+                    'fetch_format' => 'auto',
+                ]
+            );
 
-        if (!$result || !method_exists($result, 'getSecurePath')) {
-            throw new \Exception('Respuesta inválida de Cloudinary');
+            return back()->with(
+                'success',
+                '¡Imagen subida correctamente a Cloudinary!'
+            );
+
+        } catch (\Throwable $e) {
+            logger()->error('Cloudinary upload error: ' . $e->getMessage());
+
+            return back()->with(
+                'error',
+                'Error al subir imagen: ' . $e->getMessage()
+            );
         }
-
-        return back()->with(
-            'success',
-            '¡Imagen subida correctamente a Cloudinary!'
-        );
-
-    } catch (\Exception $e) {
-        logger()->error('Cloudinary upload error: ' . $e->getMessage());
-
-        return back()->with(
-            'error',
-            'Error al subir imagen: ' . $e->getMessage()
-        );
     }
-}
-
 }
