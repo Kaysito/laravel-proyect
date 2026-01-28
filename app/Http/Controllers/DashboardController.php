@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class DashboardController extends Controller
 {
@@ -40,7 +39,7 @@ class DashboardController extends Controller
     {
         try {
             $totalClicks = DB::table('click_tests')->count();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $totalClicks = 0;
         }
 
@@ -83,63 +82,40 @@ class DashboardController extends Controller
 
     public function carrusel()
     {
-        $imagenes = [];
-
-        try {
-            $search = Cloudinary::search()
-                ->expression('folder:carrusel')
-                ->sortBy('created_at', 'desc')
-                ->maxResults(20)
-                ->execute();
-
-            // Compatible local / Render
-            if (is_array($search) && isset($search['resources'])) {
-                $imagenes = $search['resources'];
-            } elseif (is_object($search) && method_exists($search, 'getArrayCopy')) {
-                $data = $search->getArrayCopy();
-                $imagenes = $data['resources'] ?? [];
-            }
-
-        } catch (\Throwable $e) {
-            logger()->error('Cloudinary search error: ' . $e->getMessage());
-        }
+        $imagenes = DB::table('carrusel_images')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('dashboard.carrusel', compact('imagenes'));
     }
 
     /* ===============================
-       SUBIR FOTO A CLOUDINARY
+       SUBIR FOTO (UPLOADCARE)
     =============================== */
 
     public function subirFoto(Request $request)
     {
         $request->validate([
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5048',
+            'image_url' => 'required|url'
         ]);
 
-        try {
-            Cloudinary::uploadFile(
-                $request->file('imagen')->getRealPath(),
-                [
-                    'folder' => 'carrusel',
-                    'public_id' => 'foto_' . uniqid(),
-                    'quality' => 'auto',
-                    'fetch_format' => 'auto',
-                ]
-            );
+        DB::table('carrusel_images')->insert([
+            'url' => $request->image_url,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-            return back()->with(
-                'success',
-                '¡Imagen subida correctamente a Cloudinary!'
-            );
+        return back()->with('success', '¡Imagen agregada al carrusel!');
+    }
 
-        } catch (\Throwable $e) {
-            logger()->error('Cloudinary upload error: ' . $e->getMessage());
+    /* ===============================
+       ELIMINAR FOTO (OPCIONAL)
+    =============================== */
 
-            return back()->with(
-                'error',
-                'Error al subir imagen: ' . $e->getMessage()
-            );
-        }
+    public function eliminarFoto($id)
+    {
+        DB::table('carrusel_images')->where('id', $id)->delete();
+
+        return back()->with('success', 'Imagen eliminada correctamente');
     }
 }
