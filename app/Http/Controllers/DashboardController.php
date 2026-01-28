@@ -43,9 +43,7 @@ class DashboardController extends Controller
             $totalClicks = 0;
         }
 
-        return view('dashboard.clicker', [
-            'total' => $totalClicks
-        ]);
+        return view('dashboard.clicker', compact('totalClicks'));
     }
 
     public function storeClick()
@@ -73,11 +71,11 @@ class DashboardController extends Controller
             'mensaje' => 'required|string|max:255',
         ]);
 
-        return back()->with('success', '¡Formulario enviado y validado correctamente!');
+        return back()->with('success', '¡Formulario enviado correctamente!');
     }
 
     /* ===============================
-       CARRUSEL (LISTAR IMÁGENES)
+       CARRUSEL (UPLOADCARE + DB)
     =============================== */
 
     public function carrusel()
@@ -89,14 +87,10 @@ class DashboardController extends Controller
         return view('dashboard.carrusel', compact('imagenes'));
     }
 
-    /* ===============================
-       SUBIR FOTO (UPLOADCARE)
-    =============================== */
-
     public function subirFoto(Request $request)
     {
         $request->validate([
-            'image_url' => 'required|url'
+            'image_url' => 'required|url',
         ]);
 
         DB::table('carrusel_images')->insert([
@@ -108,13 +102,11 @@ class DashboardController extends Controller
         return back()->with('success', '¡Imagen agregada al carrusel!');
     }
 
-    /* ===============================
-       ELIMINAR FOTO (OPCIONAL)
-    =============================== */
-
     public function eliminarFoto($id)
     {
-        DB::table('carrusel_images')->where('id', $id)->delete();
+        DB::table('carrusel_images')
+            ->where('id', $id)
+            ->delete();
 
         return back()->with('success', 'Imagen eliminada correctamente');
     }
