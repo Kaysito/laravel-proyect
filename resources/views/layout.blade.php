@@ -1,131 +1,51 @@
-@extends('layout')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Dashboard')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center">
 
-@section('breadcrumb', 'Galería de Imágenes')
-
-@section('content')
-<div class="max-w-4xl mx-auto">
-
-    {{-- ================== HEADER ================== --}}
-    <div class="text-center mb-8">
-        <h2 class="text-3xl font-extrabold text-slate-800">Galería Dinámica</h2>
-        <p class="text-slate-500 mt-2">Gestiona las imágenes de tu carrusel.</p>
-    </div>
-
-    {{-- ================== MENSAJES ================== --}}
-    @if(session('success'))
-        <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-4 rounded mb-6">
-            <strong>Éxito:</strong> {{ session('success') }}
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6">
-            {{ $errors->first() }}
-        </div>
-    @endif
-
-    {{-- ================== CARRUSEL ================== --}}
-    <div class="relative w-full overflow-hidden rounded-2xl shadow-xl bg-slate-900 mb-10">
-
-        <div id="carousel-images" class="relative h-72 sm:h-96">
-
-            @if($imagenes->count())
-                @foreach($imagenes as $index => $img)
-                    <img
-                        src="{{ $img->url }}"
-                        alt="Imagen del carrusel"
-                        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700
-                        {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}"
-                    >
-                @endforeach
-            @else
-                <div class="flex items-center justify-center h-full text-slate-400">
-                    No hay imágenes aún
-                </div>
-            @endif
-
-        </div>
-
-        {{-- Controles --}}
-        @if($imagenes->count() > 1)
-            <button onclick="prevSlide()"
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-white text-xl">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
-
-            <button onclick="nextSlide()"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-white text-xl">
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-4xl w-full text-center border border-slate-200 relative">
+        
+        {{-- Breadcrumb --}}
+        @hasSection('breadcrumb')
+            <nav class="flex mb-6 text-sm text-slate-500 justify-start" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-2">
+                    <li class="inline-flex items-center">
+                        <a href="{{ route('home') }}" class="hover:text-indigo-600 transition-colors flex items-center">
+                            <i class="fa-solid fa-house text-xs mr-2"></i> Inicio
+                        </a>
+                    </li>
+                    <li><i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i></li>
+                    <li class="font-bold text-indigo-600" aria-current="page">
+                        @yield('breadcrumb')
+                    </li>
+                </ol>
+            </nav>
         @endif
+
+        {{-- Contenido principal --}}
+        @yield('content')
     </div>
 
-    {{-- ================== SUBIR IMAGEN ================== --}}
-    <div class="bg-white p-6 rounded-2xl shadow">
-        <h3 class="text-center font-bold mb-4">Subir nueva imagen</h3>
-
-        <form method="POST" action="{{ route('carrusel.subir') }}" onsubmit="return validarUpload()">
-            @csrf
-
-            {{-- Uploadcare --}}
-            <input
-                type="hidden"
-                role="uploadcare-uploader"
-                name="image_url"
-                data-public-key="b3a3c1bece70d9761e6b"
-                data-images-only
-                data-clearable
-            >
-
-            <button
-                type="submit"
-                class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl">
-                Guardar imagen
-            </button>
-        </form>
-    </div>
-
-    {{-- ================== VOLVER ================== --}}
-    <div class="mt-8 text-center">
-        <a href="{{ route('home') }}" class="text-slate-400 hover:text-slate-600">
-            ← Volver
-        </a>
-    </div>
-
-</div>
-
-{{-- ================== JS CARRUSEL ================== --}}
-@if($imagenes->count() > 1)
-<script>
-    let index = 0;
-    const images = document.querySelectorAll('#carousel-images img');
-    const total = images.length;
-
-    function show(i) {
-        index = (i + total) % total;
-        images.forEach((img, idx) => {
-            img.classList.toggle('opacity-100', idx === index);
-            img.classList.toggle('opacity-0', idx !== index);
+    {{-- Spinner para submit --}}
+    <script>
+        document.addEventListener('submit', function(e) {
+            const btn = e.target.querySelector('button[type="submit"]');
+            if(btn) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
         });
-    }
+    </script>
 
-    function nextSlide() { show(index + 1); }
-    function prevSlide() { show(index - 1); }
+    {{-- Uploadcare --}}
+    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js" charset="utf-8"></script>
 
-    setInterval(nextSlide, 5000);
-</script>
-@endif
-
-{{-- ================== JS VALIDACIÓN UPLOAD ================== --}}
-<script>
-function validarUpload() {
-    const input = document.querySelector('input[name="image_url"]');
-    if (!input.value) {
-        alert('Primero selecciona una imagen');
-        return false;
-    }
-    return true;
-}
-</script>
-
-@endsection
+</body>
+</html>
