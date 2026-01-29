@@ -21,9 +21,15 @@ class DashboardController extends Controller
         return view('dashboard.calculadora');
     }
 
+    // ===============================
+    // ERROR DEMO → Muestra un error 500 simulado
+    // ===============================
     public function errorDemo()
     {
-        return view('dashboard.error-demo');
+        // Devuelve la vista de error-demo con status 500
+        return response()->view('dashboard.error-demo', [
+            'breadcrumb' => 'Simulación de Error'
+        ], 500);
     }
 
     public function formulario()

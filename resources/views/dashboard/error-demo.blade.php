@@ -1,19 +1,19 @@
 @extends('layout')
 
-@section('breadcrumb', 'Simulación de Error')
+@section('breadcrumb', $breadcrumb ?? 'Error')
 
 @section('content')
-    <div class="py-10">
+    <div class="py-10 text-center">
         <div class="text-red-500 text-6xl mb-4 animate-bounce">
             <i class="fa-solid fa-bug"></i>
         </div>
         
-        <h2 class="text-4xl font-bold text-slate-800 mb-2">¡Ups! Algo salió mal</h2>
-        <p class="text-slate-500 mb-6 text-lg">Parece que nos hemos encontrado con un error inesperado.</p>
+        <h2 class="text-4xl font-bold text-slate-800 mb-2">{{ $title ?? '¡Ups! Algo salió mal' }}</h2>
+        <p class="text-slate-500 mb-6 text-lg">{{ $message ?? 'Ha ocurrido un error inesperado en el sistema.' }}</p>
 
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8 text-left text-sm font-mono text-red-700">
-            <p><strong>Error Code:</strong> 500 Internal Server Error</p>
-            <p><strong>Message:</strong> Simulation_Exception: This is just a test page.</p>
+            <p><strong>Error Code:</strong> {{ $code ?? '500' }}</p>
+            <p><strong>Message:</strong> {{ $exceptionMessage ?? 'Simulation_Exception: Este es un mensaje de prueba.' }}</p>
         </div>
 
         <div class="space-x-4">
