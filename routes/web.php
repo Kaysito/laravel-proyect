@@ -24,7 +24,7 @@ Route::get('/carrusel', [DashboardController::class, 'carrusel'])->name('carruse
 Route::post('/carrusel/subir', [DashboardController::class, 'subirFoto'])->name('carrusel.subir');
 Route::delete('/carrusel/eliminar/{id}', [DashboardController::class, 'eliminarFoto'])->name('carrusel.eliminar');
 
-// 6. ERROR DEMO → 500 simulado, sin usar sesión
+// 6. ERROR DEMO → 500 simulado, sin usar sesión ni DB
 Route::get('/error-demo', [DashboardController::class, 'errorDemo'])
     ->name('error.demo')
     ->withoutMiddleware([StartSession::class]);
@@ -35,6 +35,10 @@ Route::post('/validar-formulario', [DashboardController::class, 'validarFormular
 
 // 8. Fallback global para rutas inexistentes → 404 personalizado
 Route::fallback(function () {
-    // Vista 404 segura que no depende de la DB ni de la sesión
-    return response()->view('errors.404', [], 404);
+    return response()->view('errors.404', [
+        'title' => '404 - Página no encontrada',
+        'message' => 'La página que buscas no existe o fue eliminada.',
+        'code' => 404,
+        'exceptionMessage' => 'Ruta no encontrada'
+    ], 404);
 });
