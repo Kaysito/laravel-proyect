@@ -15,11 +15,11 @@
     </div>
 
     {{-- Contador Grande --}}
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
-        <p class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Clicks Registrados</p>
+    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mb-8 transition hover:shadow-md">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total de Clicks</p>
         
-        {{-- CORRECCIÓN AQUÍ: Usamos $totalClicks en lugar de $total --}}
-        <div class="text-6xl font-black text-indigo-600 font-mono">
+        {{-- AQUÍ ESTABA EL ERROR: Cambiamos $total por $totalClicks --}}
+        <div class="text-6xl font-black text-indigo-600 font-mono tracking-tighter">
             {{ $totalClicks }}
         </div>
     </div>
@@ -35,15 +35,15 @@
     {{-- Botón de Acción --}}
     <form action="{{ route('guardar.click') }}" method="POST">
         @csrf
-        <button type="submit" class="group w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-3">
+        <button type="submit" class="group w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-3">
             <span class="text-lg">¡Registrar Click!</span>
-            <i class="fa-solid fa-hand-pointer text-xl group-hover:scale-110 transition-transform"></i>
+            <i class="fa-solid fa-hand-pointer text-xl group-hover:rotate-12 transition-transform"></i>
         </button>
     </form>
 
     <div class="mt-8">
-        <a href="{{ route('home') }}" class="text-slate-400 hover:text-slate-600 transition text-sm font-medium">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Volver al inicio
+        <a href="{{ route('home') }}" class="text-slate-400 hover:text-slate-600 transition text-sm font-medium flex items-center justify-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Volver al inicio
         </a>
     </div>
 
