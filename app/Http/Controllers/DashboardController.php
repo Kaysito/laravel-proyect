@@ -21,9 +21,10 @@ class DashboardController extends Controller
         return view('dashboard.calculadora');
     }
 
+    // CAMBIO AQUÍ: Ahora lanza un error 404 real del sistema
     public function errorDemo()
     {
-        return view('dashboard.error-demo');
+        abort(404); 
     }
 
     public function formulario()
@@ -80,6 +81,7 @@ class DashboardController extends Controller
 
     public function carrusel()
     {
+        // Traemos las imágenes de la Base de Datos
         $imagenes = DB::table('carrusel_images')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -93,6 +95,7 @@ class DashboardController extends Controller
             'image_url' => 'required|url',
         ]);
 
+        // Guardamos la URL de Uploadcare en la BD
         DB::table('carrusel_images')->insert([
             'url' => $request->image_url,
             'created_at' => now(),
@@ -104,6 +107,7 @@ class DashboardController extends Controller
 
     public function eliminarFoto($id)
     {
+        // Borramos usando el ID
         DB::table('carrusel_images')
             ->where('id', $id)
             ->delete();
