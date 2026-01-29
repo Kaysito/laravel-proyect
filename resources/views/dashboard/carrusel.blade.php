@@ -24,11 +24,20 @@
 
             @if($imagenes->count())
                 @foreach($imagenes as $index => $img)
-                    <img
-                        src="{{ $img->url }}"
-                        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700
-                        {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}"
-                    >
+                    <div class="absolute inset-0 w-full h-full transition-opacity duration-700 {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}">
+                        <img src="{{ $img->url }}" class="w-full h-full object-cover">
+
+                        {{-- BOTÓN BORRAR --}}
+                        <form action="{{ route('carrusel.eliminar', $img->id) }}" method="POST" 
+                              class="absolute top-2 right-2">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('¿Seguro que quieres eliminar esta imagen?')" 
+                                    class="bg-red-600 hover:bg-red-700 text-white p-1 rounded-full text-sm">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 @endforeach
             @else
                 <div class="flex items-center justify-center h-full text-slate-400">
@@ -82,7 +91,7 @@
 @if($imagenes->count())
 <script>
     let index = 0;
-    const images = document.querySelectorAll('#carousel-images img');
+    const images = document.querySelectorAll('#carousel-images > div');
     const total = images.length;
 
     function show(i) {
