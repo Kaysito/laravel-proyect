@@ -1,6 +1,18 @@
 @extends('layout')
 
-@section('breadcrumb', 'Inicio > Dashboard / Formulario Profesional')
+{{-- ================== BREADCRUMB CORREGIDO ================== --}}
+@section('breadcrumb')
+    {{-- Enlace al Dashboard (Sobrescribimos estilos para que parezca anterior) --}}
+    <a href="{{ route('dashboard') }}" class="font-normal text-slate-500 hover:text-indigo-600 transition-colors">
+        Dashboard
+    </a>
+    
+    {{-- Separador visual --}}
+    <span class="mx-2 text-slate-300">/</span>
+
+    {{-- Página actual (Hereda el estilo Bold e Indigo del Layout) --}}
+    <span>Formulario Profesional</span>
+@endsection
 
 @section('content')
 <div class="max-w-3xl mx-auto py-8 px-4">
@@ -22,10 +34,10 @@
 
         {{-- ================== STEP INDICATOR ================== --}}
         <div class="flex justify-between mb-6">
-            <div class="step-indicator font-semibold text-sm text-slate-500" data-step="1">1. Datos Personales</div>
-            <div class="step-indicator font-semibold text-sm text-slate-500" data-step="2">2. Ciudad / Contacto</div>
-            <div class="step-indicator font-semibold text-sm text-slate-500" data-step="3">3. Opcionales</div>
-            <div class="step-indicator font-semibold text-sm text-slate-500" data-step="4">4. Mensaje / Confirmación</div>
+            <div class="step-indicator font-semibold text-sm text-slate-500 cursor-pointer" data-step="1">1. Datos Personales</div>
+            <div class="step-indicator font-semibold text-sm text-slate-500 cursor-pointer" data-step="2">2. Ciudad / Contacto</div>
+            <div class="step-indicator font-semibold text-sm text-slate-500 cursor-pointer" data-step="3">3. Opcionales</div>
+            <div class="step-indicator font-semibold text-sm text-slate-500 cursor-pointer" data-step="4">4. Mensaje / Confirmación</div>
         </div>
 
         {{-- ---------------- STEP 1: Datos Personales ---------------- --}}
@@ -128,7 +140,8 @@
     </form>
 
     <div class="mt-6 text-center">
-        <a href="{{ route('home') }}" class="text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 text-sm">
+        {{-- Enlace inferior corregido para apuntar a dashboard --}}
+        <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 text-sm">
             <i class="fa-solid fa-arrow-left"></i> Volver al Dashboard
         </a>
     </div>
@@ -164,6 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
     prevBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             if(currentStep > 0) showStep(currentStep - 1);
+        });
+    });
+    
+    // (Opcional) Permitir clic en los indicadores para retroceder
+    stepIndicators.forEach((ind, i) => {
+        ind.addEventListener('click', () => {
+            if(i < currentStep) showStep(i);
         });
     });
 
