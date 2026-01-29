@@ -22,13 +22,16 @@ class DashboardController extends Controller
     }
 
     // ===============================
-    // ERROR DEMO → Muestra un error 500 simulado
+    // ERROR DEMO → Muestra un error 500 simulado full screen
     // ===============================
     public function errorDemo()
     {
-        // Devuelve la vista de error-demo con status 500
+        // Status 500, layout full pantalla
         return response()->view('dashboard.error-demo', [
-            'breadcrumb' => 'Simulación de Error'
+            'title' => '¡Ups! Algo salió mal',
+            'message' => 'Ha ocurrido un error inesperado en el sistema.',
+            'code' => 500,
+            'exceptionMessage' => 'Simulation_Exception: Este es un mensaje de prueba.'
         ], 500);
     }
 
