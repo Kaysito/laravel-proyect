@@ -2,15 +2,12 @@
 
 {{-- ================== BREADCRUMB CORREGIDO ================== --}}
 @section('breadcrumb')
-    {{-- Enlace al Dashboard (Sobrescribimos estilos para que parezca anterior) --}}
-    <a href="{{ route('dashboard') }}" class="font-normal text-slate-500 hover:text-indigo-600 transition-colors">
+    <a href="{{ route('home') }}" class="font-normal text-slate-500 hover:text-indigo-600 transition-colors">
         Dashboard
     </a>
     
-    {{-- Separador visual --}}
     <span class="mx-2 text-slate-300">/</span>
 
-    {{-- Página actual (Hereda el estilo Bold e Indigo del Layout) --}}
     <span>Formulario Profesional</span>
 @endsection
 
@@ -140,8 +137,7 @@
     </form>
 
     <div class="mt-6 text-center">
-        {{-- Enlace inferior corregido para apuntar a dashboard --}}
-        <a href="{{ route('dashboard') }}" class="text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 text-sm">
+        <a href="{{ route('home') }}" class="text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 text-sm">
             <i class="fa-solid fa-arrow-left"></i> Volver al Dashboard
         </a>
     </div>
@@ -180,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // (Opcional) Permitir clic en los indicadores para retroceder
     stepIndicators.forEach((ind, i) => {
         ind.addEventListener('click', () => {
             if(i < currentStep) showStep(i);
