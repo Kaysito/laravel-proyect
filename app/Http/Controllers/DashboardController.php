@@ -69,19 +69,27 @@ class DashboardController extends Controller
        FORMULARIO
     =============================== */
 
-    public function validarFormulario(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required|string|min:3|max:50',
-            'email'  => 'required|email:rfc,dns',
-            'edad'   => 'required|integer|min:18|max:100',
-            'fecha_nacimiento' => 'required|date|before:today',
-            'sitio_web' => 'nullable|url',
-            'mensaje' => 'required|string|max:255',
-        ]);
+   public function validarFormulario(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|min:3|max:50',
 
-        return back()->with('success', '¡Formulario enviado correctamente!');
-    }
+        'email' => [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/'
+        ],
+
+        'fecha_nacimiento' => 'required|date|before:today',
+
+        'sitio_web' => 'nullable|url',
+
+        'mensaje' => 'required|string|max:255',
+    ]);
+
+    return back()->with('success', '¡Formulario enviado correctamente!');
+}
 
     /* ===============================
        CARRUSEL (UPLOADCARE + DB)
