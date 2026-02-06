@@ -24,10 +24,8 @@ class CaptchaController extends Controller
         ]);
 
         if ($response->json()['success']) {
-            // ¡ÉXITO! Redirigimos al Home
             return redirect()->route('home');
         } else {
-            // ERROR: Volvemos atrás con un mensaje
             return back()->with('error', 'Debes completar el captcha correctamente.');
         }
     }

@@ -22,11 +22,10 @@ class DashboardController extends Controller
     }
 
     // ===============================
-    // ERROR DEMO → Muestra un error 500 simulado full screen
+    // ERROR DEMO
     // ===============================
     public function errorDemo()
     {
-        // Status 500, layout full pantalla
         return response()->view('dashboard.error-demo', [
             'title' => '¡Ups! Algo salió mal',
             'message' => 'Ha ocurrido un error inesperado en el sistema.',
@@ -66,30 +65,54 @@ class DashboardController extends Controller
     }
 
     /* ===============================
-       FORMULARIO
+       FORMULARIO (FETCH + DB CONTACTOS)
     =============================== */
 
-   public function validarFormulario(Request $request)
-{
-    $request->validate([
-        'nombre' => 'required|string|min:3|max:50',
+    public function validarFormulario(Request $request)
+    {
+        // 1. Validación de datos
+        $validated = $request->validate([
+            'nombre' => 'required|string|min:3|max:50',
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/'
+            ],
+            'fecha_nacimiento' => 'required|date|before:today',
+            'sitio_web' => 'nullable|url',
+            'mensaje' => 'required|string|max:255',
+        ], [
+            'email.regex' => 'El correo debe ser válido y puede usar cualquier dominio.'
+        ]);
 
-        'email' => [
-            'required',
-            'string',
-            'max:255',
-            'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/'
-        ],
+        // 2. Insertar en la Base de Datos (Tabla 'contactos')
+        // Usamos insertGetId para obtener el ID y mostrarlo en el DOM si quieres
+        $nuevoId = DB::table('contactos')->insertGetId([
+            'nombre' => $validated['nombre'],
+            'email' => $validated['email'],
+            'fecha_nacimiento' => $validated['fecha_nacimiento'],
+            'sitio_web' => $validated['sitio_web'] ?? null, // Manejo de nulos
+            'mensaje' => $validated['mensaje'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        'fecha_nacimiento' => 'required|date|before:today',
+        // 3. Retornar JSON para el Fetch
+        // Devolvemos los datos procesados para que JS manipule el DOM
+        return response()->json([
+            'success' => true,
+            'message' => '¡Contacto guardado correctamente!',
+            'data' => [
+                'id' => $nuevoId,
+                'nombre' => $validated['nombre'],
+                'email' => $validated['email'],
+                'fecha' => $validated['fecha_nacimiento'],
+                'mensaje' => $validated['mensaje']
+            ]
+        ]);
+    }
 
-        'sitio_web' => 'nullable|url',
-
-        'mensaje' => 'required|string|max:255',
-    ]);
-
-    return back()->with('success', '¡Formulario enviado correctamente!');
-}
 
     /* ===============================
        CARRUSEL (UPLOADCARE + DB)
