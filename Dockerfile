@@ -28,5 +28,8 @@ COPY . .
 # 6. Instalamos las librerías de Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# 7. Damos permisos a las carpetas de almacenamiento (para que no de error 500)
+# 7. Damos permisos a las carpetas de almacenamiento
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+8. COMANDO DE ARRANQUE: Limpia caché y LUEGO inicia Apache
+CMD sh -c "php artisan optimize:clear && apache2-foreground"
