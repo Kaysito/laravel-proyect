@@ -1,243 +1,187 @@
 @extends('layout')
 
+@section('title', 'Nuevo Contacto')
 @section('breadcrumb', 'Formulario Profesional')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+<div class="text-left"> {{-- Alineación a la izquierda para contrarrestar el center del layout --}}
+    
+    {{-- ALERTAS DE ESTADO (ocultas por defecto) --}}
+    <div id="formAlert" class="hidden mb-6 rounded-md p-4 text-sm font-medium"></div>
 
-    {{-- CARD PRINCIPAL --}}
-    <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-6 sm:p-10">
+    <form id="contactForm">
+        @csrf
+        <div class="space-y-12">
+            
+            <div class="border-b border-gray-900/10 pb-12">
+                <h2 class="text-base/7 font-semibold text-gray-900">Información de Contacto</h2>
+                <p class="mt-1 text-sm/6 text-gray-600">Esta información será registrada en la base de datos de contactos.</p>
 
-        {{-- HEADER --}}
-        <div class="mb-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">
-                Formulario Profesional (AJAX)
-            </h2>
-            <p class="text-slate-500 mt-1">
-                Los datos se guardan en BD y se muestran aquí sin recargar.
-            </p>
-        </div>
+                <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                    
+                    <div class="sm:col-span-4">
+                        <label for="sitio_web" class="block text-sm/6 font-medium text-gray-900">Sitio Web</label>
+                        <div class="mt-2">
+                            <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
+                                <div class="shrink-0 text-base text-gray-500 select-none sm:text-sm/6">https://</div>
+                                <input type="text" name="sitio_web" id="sitio_web" class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6" placeholder="tu-sitio.com">
+                            </div>
+                        </div>
+                    </div>
 
-        {{-- ALERTAS GLOBALES (JS las manipulará) --}}
-        <div id="alerta-exito" class="hidden mb-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3">
-            <strong>✔ Éxito:</strong> <span id="msg-exito"></span>
-        </div>
+                    <div class="col-span-full">
+                        <label for="mensaje" class="block text-sm/6 font-medium text-gray-900">Mensaje / Acerca de</label>
+                        <div class="mt-2">
+                            <textarea name="mensaje" id="mensaje" rows="3" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required></textarea>
+                        </div>
+                        <p class="mt-3 text-sm/6 text-gray-600">Escribe aquí los detalles de la consulta o mensaje principal.</p>
+                    </div>
 
-        {{-- FORMULARIO --}}
-        {{-- CORRECCIÓN APLICADA: Se agregó method="POST" para evitar el error de GET en los logs --}}
-        <form id="ajaxForm" action="{{ route('formulario.validar') }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-6" novalidate>
-            @csrf
-
-            {{-- NOMBRE --}}
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Nombre completo <span class="text-red-500">*</span>
-                </label>
-                <input type="text" 
-                       name="nombre" 
-                       id="nombre"
-                       required 
-                       maxlength="50"
-                       class="w-full rounded-lg border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                {{-- Contenedor de error JS --}}
-                <p id="error-nombre" class="text-xs text-red-500 mt-1 hidden"></p>
-            </div>
-
-            {{-- EMAIL --}}
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Correo electrónico <span class="text-red-500">*</span>
-                </label>
-                <input type="email" 
-                       name="email" 
-                       id="email"
-                       required 
-                       placeholder="usuario@dominio.fun"
-                       class="w-full rounded-lg border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                <p class="text-xs text-slate-400 mt-1">
-                    Dominios modernos permitidos (.fun, .shop, .xyz, .online…)
-                </p>
-                <p id="error-email" class="text-xs text-red-500 mt-1 hidden"></p>
-            </div>
-
-            {{-- FECHA --}}
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Fecha de nacimiento <span class="text-red-500">*</span>
-                </label>
-                <input type="date" 
-                       name="fecha_nacimiento" 
-                       id="fecha_nacimiento"
-                       required 
-                       class="w-full rounded-lg border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                <p id="error-fecha_nacimiento" class="text-xs text-red-500 mt-1 hidden"></p>
-            </div>
-
-            {{-- SITIO WEB --}}
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Sitio web (opcional)
-                </label>
-                <input type="url" 
-                       name="sitio_web" 
-                       id="sitio_web"
-                       placeholder="https://mi-sitio.shop"
-                       class="w-full rounded-lg border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
-                <p id="error-sitio_web" class="text-xs text-red-500 mt-1 hidden"></p>
-            </div>
-
-            {{-- MENSAJE --}}
-            <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Mensaje <span class="text-red-500">*</span>
-                </label>
-                <textarea name="mensaje" 
-                          id="mensaje"
-                          rows="4" 
-                          maxlength="255" 
-                          required 
-                          class="w-full rounded-lg border border-slate-300 px-4 py-2 resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"></textarea>
-                <div class="flex justify-between text-xs text-slate-400 mt-1">
-                    <span>Máx. 255 caracteres</span>
+                    <div class="col-span-full">
+                        <label class="block text-sm/6 font-medium text-gray-900">Avatar</label>
+                        <div class="mt-2 flex items-center gap-x-3">
+                            <div class="h-12 w-12 text-gray-300">
+                                <svg class="h-12 w-12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653Zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438ZM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0Z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <button type="button" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50">Cambiar</button>
+                        </div>
+                    </div>
                 </div>
-                <p id="error-mensaje" class="text-xs text-red-500 mt-1 hidden"></p>
             </div>
 
-            {{-- BOTÓN DE ENVÍO --}}
-            <div class="sm:col-span-2 pt-4">
-                <button type="submit" 
-                        id="btn-submit"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition text-white font-semibold py-3 rounded-xl shadow flex justify-center items-center gap-2">
-                    <span>Enviar formulario</span>
-                    {{-- Spinner de carga (oculto por defecto) --}}
-                    <svg id="spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+            <div class="border-b border-gray-900/10 pb-12">
+                <h2 class="text-base/7 font-semibold text-gray-900">Datos Personales</h2>
+                <p class="mt-1 text-sm/6 text-gray-600">Información necesaria para validar el registro.</p>
+
+                <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                    
+                    <div class="sm:col-span-3">
+                        <label for="nombre" class="block text-sm/6 font-medium text-gray-900">Nombre Completo</label>
+                        <div class="mt-2">
+                            <input type="text" name="nombre" id="nombre" autocomplete="given-name" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="fecha_nacimiento" class="block text-sm/6 font-medium text-gray-900">Fecha de Nacimiento</label>
+                        <div class="mt-2">
+                            <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-4">
+                        <label for="email" class="block text-sm/6 font-medium text-gray-900">Dirección de Email</label>
+                        <div class="mt-2">
+                            <input id="email" name="email" type="email" autocomplete="email" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="country" class="block text-sm/6 font-medium text-gray-900">País</label>
+                        <div class="mt-2 grid grid-cols-1">
+                            <select id="country" name="country" autocomplete="country-name" class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                                <option>México</option>
+                                <option>Estados Unidos</option>
+                                <option>Canadá</option>
+                            </select>
+                            <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-end gap-x-6">
+                <button type="button" onclick="window.location.reload()" class="text-sm/6 font-semibold text-gray-900">Cancelar</button>
+                <button type="submit" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    Guardar Contacto
                 </button>
             </div>
-        </form>
-
-        {{-- LINKS --}}
-        <div class="mt-6">
-            <a href="{{ route('home') }}" class="text-sm text-slate-500 hover:text-slate-800">
-                ← Volver al menú
-            </a>
         </div>
-    </div>
-
-    {{-- ========================================== --}}
-    {{-- RESULTADO DOM (Inicialmente Oculto) --}}
-    {{-- Aquí inyectaremos los datos que devuelve la BD --}}
-    {{-- ========================================== --}}
-    <div id="resultado-card" class="hidden mt-8 bg-indigo-50 rounded-2xl shadow-md border border-indigo-100 p-6 sm:p-10 transition-all duration-500">
-        <div class="flex items-center gap-4 mb-4">
-            <div class="bg-indigo-600 text-white rounded-full p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-indigo-900">Registro Guardado en BD</h3>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm text-indigo-800">
-            <p><strong>ID Generado:</strong> <span id="res-id" class="font-mono bg-white px-2 py-1 rounded border border-indigo-200"></span></p>
-            <p><strong>Nombre:</strong> <span id="res-nombre"></span></p>
-            <p><strong>Email:</strong> <span id="res-email"></span></p>
-            <p><strong>Fecha Nac:</strong> <span id="res-fecha"></span></p>
-            <div class="sm:col-span-2 mt-2 p-4 bg-white rounded-lg border border-indigo-100 italic">
-                "<span id="res-mensaje"></span>"
-            </div>
+    </form>
+    
+    <div class="mt-12 border-t border-gray-200 pt-10">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Últimos Contactos Agregados</h3>
+        <div class="overflow-hidden bg-white shadow sm:rounded-md ring-1 ring-gray-200">
+            <ul role="list" class="divide-y divide-gray-200" id="contactsList">
+                <li class="px-4 py-4 sm:px-6 text-center text-gray-500 text-sm" id="emptyState">
+                    No hay contactos recientes.
+                </li>
+            </ul>
         </div>
     </div>
 
 </div>
 
-{{-- SCRIPT PARA FETCH Y DOM --}}
+{{-- SCRIPT JAVASCRIPT PARA EL FETCH --}}
 <script>
-    document.getElementById('ajaxForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // 1. Evitar recarga del navegador
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('contactForm');
+        const alertBox = document.getElementById('formAlert');
+        const listContainer = document.getElementById('contactsList');
+        const emptyState = document.getElementById('emptyState');
 
-        // Elementos de UI
-        const form = this;
-        const btn = document.getElementById('btn-submit');
-        const spinner = document.getElementById('spinner');
-        const alertSuccess = document.getElementById('alerta-exito');
-        const resultCard = document.getElementById('resultado-card');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        // Estado de carga visual
-        btn.disabled = true;
-        btn.classList.add('opacity-75');
-        spinner.classList.remove('hidden');
-        
-        // Limpiar errores previos y ocultar resultados anteriores
-        document.querySelectorAll('.text-red-500.text-xs').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('input, textarea').forEach(el => el.classList.remove('border-red-500', 'bg-red-50'));
-        alertSuccess.classList.add('hidden');
-        resultCard.classList.add('hidden');
+            const formData = new FormData(form);
 
-        // Preparar datos
-        const formData = new FormData(form);
+            fetch("{{ route('validar.formulario') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar éxito (Estilo Tailwind Green)
+                    alertBox.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'ring-red-600/20');
+                    alertBox.classList.add('block', 'bg-green-50', 'text-green-700', 'ring-1', 'ring-inset', 'ring-green-600/20');
+                    alertBox.textContent = data.message;
 
-        // 2. Fetch Request
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest', // Indica que es AJAX
-                // El CSRF token ya va incluido en el formulario
-            }
-        })
-        .then(response => response.json().then(data => ({ status: response.status, body: data })))
-        .then(({ status, body }) => {
-            
-            // CASO A: VALIDACIÓN FALLIDA (Laravel devuelve 422)
-            if (status === 422) {
-                const errors = body.errors;
-                for (const field in errors) {
-                    // Mostrar mensaje de error
-                    const errorText = document.getElementById(`error-${field}`);
-                    const inputField = document.getElementById(field);
+                    // Agregar a la lista visualmente
+                    if(emptyState) emptyState.style.display = 'none';
+
+                    const item = `
+                        <li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6 animate-pulse">
+                            <div class="flex min-w-0 gap-x-4">
+                                <div class="min-w-0 flex-auto">
+                                    <p class="text-sm font-semibold leading-6 text-gray-900">${data.data.nombre}</p>
+                                    <p class="mt-1 flex text-xs leading-5 text-gray-500">${data.data.email}</p>
+                                </div>
+                            </div>
+                            <div class="flex shrink-0 items-center gap-x-4">
+                                <div class="hidden sm:flex sm:flex-col sm:items-end">
+                                    <p class="text-sm leading-6 text-gray-900">ID: ${data.data.id}</p>
+                                    <p class="mt-1 text-xs leading-5 text-gray-500">Recién Agregado</p>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                    listContainer.insertAdjacentHTML('afterbegin', item);
                     
-                    if (errorText) {
-                        errorText.innerText = errors[field][0];
-                        errorText.classList.remove('hidden');
-                    }
-                    if (inputField) {
-                        inputField.classList.add('border-red-500', 'bg-red-50');
-                    }
+                    // Quitar animación de pulso tras un momento
+                    setTimeout(() => {
+                        listContainer.firstElementChild.classList.remove('animate-pulse');
+                    }, 1000);
+
+                    form.reset();
+                } else {
+                    throw new Error(data.message || 'Error desconocido');
                 }
-            } 
-            // CASO B: ÉXITO (Status 200)
-            else if (status === 200 && body.success) {
-                // 1. Mostrar Alerta
-                document.getElementById('msg-exito').innerText = body.message;
-                alertSuccess.classList.remove('hidden');
-
-                // 2. MANIPULACIÓN DOM: Rellenar la tarjeta con datos de la BD
-                const datos = body.data;
-                document.getElementById('res-id').innerText = '#' + datos.id;
-                document.getElementById('res-nombre').innerText = datos.nombre;
-                document.getElementById('res-email').innerText = datos.email;
-                document.getElementById('res-fecha').innerText = datos.fecha;
-                document.getElementById('res-mensaje').innerText = datos.mensaje;
-
-                // 3. Mostrar tarjeta con animación simple
-                resultCard.classList.remove('hidden');
-                
-                // 4. Resetear formulario
-                form.reset();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error crítico en el sistema (Ver consola)');
-        })
-        .finally(() => {
-            // Restaurar botón
-            btn.disabled = false;
-            btn.classList.remove('opacity-75');
-            spinner.classList.add('hidden');
+            })
+            .catch(error => {
+                // Mostrar Error (Estilo Tailwind Red)
+                alertBox.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'ring-green-600/20');
+                alertBox.classList.add('block', 'bg-red-50', 'text-red-700', 'ring-1', 'ring-inset', 'ring-red-600/20');
+                alertBox.textContent = error.message || 'Hubo un error al guardar.';
+            });
         });
     });
 </script>

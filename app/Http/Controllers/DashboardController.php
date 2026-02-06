@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /* ===============================
-       VISTAS BÁSICAS
-    =============================== */
+    /* =========================================================
+       1. VISTAS GENERALES (Home, Calculadora, Error)
+    ========================================================= */
 
     public function index()
     {
@@ -21,31 +21,25 @@ class DashboardController extends Controller
         return view('dashboard.calculadora');
     }
 
-    // ===============================
-    // ERROR DEMO
-    // ===============================
     public function errorDemo()
     {
+        // Simulamos un error 500 controlado para probar la vista de errores
         return response()->view('dashboard.error-demo', [
             'title' => '¡Ups! Algo salió mal',
             'message' => 'Ha ocurrido un error inesperado en el sistema.',
             'code' => 500,
-            'exceptionMessage' => 'Simulation_Exception: Este es un mensaje de prueba.'
+            'exceptionMessage' => 'Simulation_Exception: Este es un mensaje de prueba generado por el controlador.'
         ], 500);
     }
 
-    public function formulario()
-    {
-        return view('dashboard.formulario');
-    }
-
-    /* ===============================
-       CLICKER
-    =============================== */
+    /* =========================================================
+       2. CLICKER (Contador simple con Base de Datos)
+    ========================================================= */
 
     public function clicker()
     {
         try {
+            // Intenta contar; si la tabla no existe, devuelve 0 en lugar de error
             $totalClicks = DB::table('click_tests')->count();
         } catch (\Throwable $e) {
             $totalClicks = 0;
@@ -61,65 +55,68 @@ class DashboardController extends Controller
             'updated_at' => now(),
         ]);
 
-        return back()->with('success', '¡Click guardado exitosamente!');
+        return back()->with('success', '¡Click registrado exitosamente!');
     }
 
-    /* ===============================
-       FORMULARIO (FETCH + DB CONTACTOS)
-    =============================== */
+    /* =========================================================
+       3. FORMULARIO DE CONTACTO (Vista + API Fetch)
+    ========================================================= */
+
+    public function formulario()
+    {
+        return view('dashboard.formulario');
+    }
 
     public function validarFormulario(Request $request)
     {
-        // 1. Validación de datos
+        // 1. Validación estricta
         $validated = $request->validate([
             'nombre' => 'required|string|min:3|max:50',
-            'email' => [
+            'email'  => [
                 'required',
                 'string',
                 'max:255',
+                // Regex simple para asegurar formato email
                 'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/'
             ],
             'fecha_nacimiento' => 'required|date|before:today',
-            'sitio_web' => 'nullable|url',
-            'mensaje' => 'required|string|max:255',
+            'sitio_web'        => 'nullable|url',
+            'mensaje'          => 'required|string|max:255',
         ], [
-            'email.regex' => 'El correo debe ser válido y puede usar cualquier dominio.'
+            'email.regex' => 'El formato del correo no es válido.',
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.'
         ]);
 
-        // 2. Insertar en la Base de Datos (Tabla 'contactos')
-        // Usamos insertGetId para obtener el ID y mostrarlo en el DOM si quieres
+        // 2. Insertar en BD
         $nuevoId = DB::table('contactos')->insertGetId([
-            'nombre' => $validated['nombre'],
-            'email' => $validated['email'],
+            'nombre'           => $validated['nombre'],
+            'email'            => $validated['email'],
             'fecha_nacimiento' => $validated['fecha_nacimiento'],
-            'sitio_web' => $validated['sitio_web'] ?? null, // Manejo de nulos
-            'mensaje' => $validated['mensaje'],
-            'created_at' => now(),
-            'updated_at' => now(),
+            'sitio_web'        => $validated['sitio_web'] ?? null,
+            'mensaje'          => $validated['mensaje'],
+            'created_at'       => now(),
+            'updated_at'       => now(),
         ]);
 
-        // 3. Retornar JSON para el Fetch
-        // Devolvemos los datos procesados para que JS manipule el DOM
+        // 3. Respuesta JSON para JavaScript (Fetch)
         return response()->json([
             'success' => true,
             'message' => '¡Contacto guardado correctamente!',
-            'data' => [
-                'id' => $nuevoId,
+            'data'    => [
+                'id'     => $nuevoId,
                 'nombre' => $validated['nombre'],
-                'email' => $validated['email'],
-                'fecha' => $validated['fecha_nacimiento'],
-                'mensaje' => $validated['mensaje']
+                'email'  => $validated['email']
             ]
         ]);
     }
 
-
-    /* ===============================
-       CARRUSEL (UPLOADCARE + DB)
-    =============================== */
+    /* =========================================================
+       4. CARRUSEL DE IMÁGENES (Gestión de URLs)
+    ========================================================= */
 
     public function carrusel()
     {
+        // Obtenemos las imágenes ordenadas por la más reciente
         $imagenes = DB::table('carrusel_images')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -131,10 +128,13 @@ class DashboardController extends Controller
     {
         $request->validate([
             'image_url' => 'required|url',
+        ], [
+            'image_url.required' => 'Debes proporcionar una URL.',
+            'image_url.url'      => 'El formato debe ser una URL válida (http/https).'
         ]);
 
         DB::table('carrusel_images')->insert([
-            'url' => $request->image_url,
+            'url'        => $request->image_url,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -144,10 +144,14 @@ class DashboardController extends Controller
 
     public function eliminarFoto($id)
     {
-        DB::table('carrusel_images')
+        $deleted = DB::table('carrusel_images')
             ->where('id', $id)
             ->delete();
 
-        return back()->with('success', 'Imagen eliminada correctamente');
+        if ($deleted) {
+            return back()->with('success', 'Imagen eliminada correctamente.');
+        }
+
+        return back()->with('error', 'No se pudo encontrar la imagen para eliminar.');
     }
 }

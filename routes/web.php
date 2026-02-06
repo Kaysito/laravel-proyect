@@ -53,6 +53,7 @@ Route::get('/error-demo', [DashboardController::class, 'errorDemo'])
 Route::get('/formulario', [DashboardController::class, 'formulario'])->name('formulario');
 Route::post('/validar-formulario', [DashboardController::class, 'validarFormulario'])->name('formulario.validar');
 
+
 // ==============================================================================
 //  AGREGADO: LA CURITA MÁGICA (Para evitar el Error 404/Fallback)
 //  Si el navegador intenta entrar a validar-formulario por GET, lo devolvemos al form.
@@ -71,3 +72,9 @@ Route::fallback(function () {
         'exceptionMessage' => 'Ruta no encontrada'
     ], 404);
 });
+
+// 1. Ruta para BUSCAR y LISTAR (Devuelve JSON)
+Route::get('/api/contactos/buscar', [DashboardController::class, 'buscarContactos'])->name('contactos.buscar');
+
+// 2. Ruta para ELIMINAR (Devuelve JSON)
+Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarContacto'])->name('contactos.eliminar');
