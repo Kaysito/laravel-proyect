@@ -24,8 +24,8 @@
         </div>
 
         {{-- FORMULARIO --}}
-        {{-- Quitamos method y action del HTML estándar para usar JS, pero dejamos el action para leer la URL --}}
-        <form id="ajaxForm" action="{{ route('formulario.validar') }}" class="grid grid-cols-1 sm:grid-cols-2 gap-6" novalidate>
+        {{-- CORRECCIÓN APLICADA: Se agregó method="POST" para evitar el error de GET en los logs --}}
+        <form id="ajaxForm" action="{{ route('formulario.validar') }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-6" novalidate>
             @csrf
 
             {{-- NOMBRE --}}
@@ -156,7 +156,7 @@
 {{-- SCRIPT PARA FETCH Y DOM --}}
 <script>
     document.getElementById('ajaxForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // 1. Evitar recarga
+        e.preventDefault(); // 1. Evitar recarga del navegador
 
         // Elementos de UI
         const form = this;
@@ -185,7 +185,7 @@
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest', // Indica que es AJAX
-                // 'X-CSRF-TOKEN' ya va incluido si usas <input type="hidden" name="_token"> generado por @csrf
+                // El CSRF token ya va incluido en el formulario
             }
         })
         .then(response => response.json().then(data => ({ status: response.status, body: data })))
@@ -231,7 +231,7 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error crítico en el sistema');
+            alert('Error crítico en el sistema (Ver consola)');
         })
         .finally(() => {
             // Restaurar botón
