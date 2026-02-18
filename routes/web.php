@@ -70,10 +70,15 @@ Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarConta
 // VISTA: Ahora apunta al controlador, no es una función suelta
 Route::get('/empleados', [DashboardController::class, 'indexEmpleados'])->name('empleados');
 
-// API: Rutas para el Fetch de JavaScript
+// API - Listar
 Route::get('/api/empleados', [DashboardController::class, 'listarEmpleados']);
+// API - Crear
 Route::post('/api/empleados', [DashboardController::class, 'crearEmpleado']);
+// API - Eliminar
 Route::delete('/api/empleados/{id}', [DashboardController::class, 'eliminarEmpleado']);
+
+// ===> AGREGA ESTA LÍNEA PARA EDITAR <===
+Route::put('/api/empleados/{id}', [DashboardController::class, 'actualizarEmpleado']);
 
 
 // ======================================================================
@@ -87,3 +92,4 @@ Route::fallback(function () {
         'exceptionMessage' => 'Ruta no encontrada'
     ], 404);
 });
+

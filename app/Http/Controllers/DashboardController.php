@@ -219,4 +219,34 @@ class DashboardController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function actualizarEmpleado(Request $request, $id)
+    {
+        // 1. Validar datos (el email puede ser el mismo si es el propio usuario)
+        $validated = $request->validate([
+            'nombre' => 'required|min:3',
+            // Ignoramos el email actual para que no de error de "ya existe"
+            'email'  => 'required|email|unique:employees,email,' . $id,
+            'cargo'  => 'required|min:3',
+        ]);
+
+        // 2. Actualizar en BD
+        DB::table('employees')
+            ->where('id', $id)
+            ->update([
+                'nombre'     => $validated['nombre'],
+                'email'      => $validated['email'],
+                'cargo'      => $validated['cargo'],
+                'updated_at' => now(),
+            ]);
+
+        // 3. Responder
+        return response()->json([
+            'success' => true,
+            'empleado' => [
+                'id' => $id,
+                ...$validated
+            ]
+        ]);
+    }
 }
