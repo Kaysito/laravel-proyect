@@ -78,3 +78,18 @@ Route::get('/api/contactos/buscar', [DashboardController::class, 'buscarContacto
 
 // 2. Ruta para ELIMINAR (Devuelve JSON)
 Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarContacto'])->name('contactos.eliminar');
+// ====================== EMPLEADOS (API + VISTA) ======================
+
+// Vista
+Route::get('/empleados', function () {
+    return view('dashboard.empleados');
+})->name('empleados');
+
+// API - Listar
+Route::get('/api/empleados', [DashboardController::class, 'listarEmpleados']);
+
+// API - Crear
+Route::post('/api/empleados', [DashboardController::class, 'crearEmpleado']);
+
+// API - Eliminar
+Route::delete('/api/empleados/{id}', [DashboardController::class, 'eliminarEmpleado']);

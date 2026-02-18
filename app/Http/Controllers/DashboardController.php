@@ -154,4 +154,49 @@ class DashboardController extends Controller
 
         return back()->with('error', 'No se pudo encontrar la imagen para eliminar.');
     }
+    /* =========================================================
+   5. EMPLEADOS (CRUD con Fetch)
+========================================================= */
+
+public function listarEmpleados()
+{
+    $empleados = DB::table('employees')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($empleados);
+}
+
+public function crearEmpleado(Request $request)
+{
+    $validated = $request->validate([
+        'nombre' => 'required|min:3',
+        'email'  => 'required|email|unique:employees,email',
+        'cargo'  => 'required|min:3',
+    ]);
+
+    $id = DB::table('employees')->insertGetId([
+        'nombre' => $validated['nombre'],
+        'email'  => $validated['email'],
+        'cargo'  => $validated['cargo'],
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'empleado' => [
+            'id' => $id,
+            ...$validated
+        ]
+    ]);
+}
+
+public function eliminarEmpleado($id)
+{
+    DB::table('employees')->where('id', $id)->delete();
+
+    return response()->json(['success' => true]);
+}
+
 }
