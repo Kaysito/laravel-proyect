@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{-- CSRF TOKEN (OBLIGATORIO PARA FETCH) --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'Dashboard')</title>
 
     {{-- Tailwind --}}
@@ -14,17 +18,20 @@
     {{-- Google reCAPTCHA --}}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
+
 <body class="bg-slate-100 min-h-screen flex items-center justify-center">
 
     <div class="bg-white p-8 rounded-2xl shadow-xl max-w-4xl w-full text-center border border-slate-200 relative">
-        
+
         {{-- Breadcrumb --}}
         @hasSection('breadcrumb')
             <nav class="flex mb-6 text-sm text-slate-500 justify-start" aria-label="Breadcrumb">
                 <ol class="inline-flex items-center space-x-2">
                     <li class="inline-flex items-center">
-                        <a href="{{ route('home') }}" class="hover:text-indigo-600 transition-colors flex items-center">
-                            <i class="fa-solid fa-house text-xs mr-2"></i> Inicio
+                        <a href="{{ route('home') }}"
+                           class="hover:text-indigo-600 transition-colors flex items-center">
+                            <i class="fa-solid fa-house text-xs mr-2"></i>
+                            Inicio
                         </a>
                     </li>
                     <li>
