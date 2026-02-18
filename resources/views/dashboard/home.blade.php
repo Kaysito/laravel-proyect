@@ -52,6 +52,20 @@
             <p class="text-sm text-slate-500 mt-1">Carrusel de fotos</p>
         </a>
 
+        {{-- EMPLEADOS (NUEVO) --}}
+        <a href="{{ route('empleados') }}"
+           class="group p-6 bg-white border border-slate-200 rounded-xl shadow-sm
+                  hover:shadow-md hover:border-violet-500 transition-all
+                  focus:outline-none focus:ring-2 focus:ring-violet-500">
+            <div class="text-violet-500 text-3xl mb-3 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <h3 class="font-bold text-slate-700">Empleados</h3>
+            <p class="text-sm text-slate-500 mt-1">
+                CRUD con Fetch + DOM
+            </p>
+        </a>
+
         {{-- ERROR PAGE --}}
         <a href="{{ route('error.demo') }}"
            class="group p-6 bg-white border border-slate-200 rounded-xl shadow-sm
