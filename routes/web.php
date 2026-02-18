@@ -4,17 +4,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Http\Request; // Necesario para el logout manual
+use Illuminate\Http\Request;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 // 1. LOGIN
 Route::get('/', [CaptchaController::class, 'showLogin'])->name('login');
 Route::post('/verificar-acceso', [CaptchaController::class, 'verifyLogin']);
 
-// ==============================================================================
-//  AGREGADO: LOGOUT (Es vital para salir del sistema)
-// ==============================================================================
+// LOGOUT
 Route::post('/logout', function (Request $request) {
-    // Lógica estándar de logout de Laravel
     auth()->logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
@@ -24,46 +27,58 @@ Route::post('/logout', function (Request $request) {
 
 // 2. DASHBOARD
 Route::get('/home', [DashboardController::class, 'index'])->name('home');
-
-// ==============================================================================
-//  AGREGADO: REDIRECCIÓN AMIGABLE
-//  Si alguien escribe "/dashboard", lo mandamos a "/home"
-// ==============================================================================
 Route::redirect('/dashboard', '/home'); 
 
 
 // 3. CALCULADORA
 Route::get('/calculadora', [DashboardController::class, 'calculadora'])->name('calculadora');
 
+
 // 4. CLICKER
 Route::get('/clicker', [DashboardController::class, 'clicker'])->name('clicker');
 Route::post('/guardar-click', [DashboardController::class, 'storeClick'])->name('guardar.click');
+
 
 // 5. CARRUSEL
 Route::get('/carrusel', [DashboardController::class, 'carrusel'])->name('carrusel');
 Route::post('/carrusel/subir', [DashboardController::class, 'subirFoto'])->name('carrusel.subir');
 Route::delete('/carrusel/eliminar/{id}', [DashboardController::class, 'eliminarFoto'])->name('carrusel.eliminar');
 
+
 // 6. ERROR DEMO
 Route::get('/error-demo', [DashboardController::class, 'errorDemo'])
     ->name('error.demo')
     ->withoutMiddleware([StartSession::class]);
 
-// 7. FORMULARIO
+
+// 7. FORMULARIO DE CONTACTO
 Route::get('/formulario', [DashboardController::class, 'formulario'])->name('formulario');
 Route::post('/validar-formulario', [DashboardController::class, 'validarFormulario'])->name('formulario.validar');
 
-
-// ==============================================================================
-//  AGREGADO: LA CURITA MÁGICA (Para evitar el Error 404/Fallback)
-//  Si el navegador intenta entrar a validar-formulario por GET, lo devolvemos al form.
-// ==============================================================================
+// Redirección para evitar error GET en ruta POST
 Route::get('/validar-formulario', function() {
     return redirect()->route('formulario');
 });
 
+// Rutas API para Contactos (Si las tienes en el controlador)
+Route::get('/api/contactos/buscar', [DashboardController::class, 'buscarContactos'])->name('contactos.buscar');
+Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarContacto'])->name('contactos.eliminar');
 
-// 8. Fallback global
+
+// ====================== 8. EMPLEADOS (CORREGIDO) ======================
+
+// VISTA: Ahora apunta al controlador, no es una función suelta
+Route::get('/empleados', [DashboardController::class, 'indexEmpleados'])->name('empleados');
+
+// API: Rutas para el Fetch de JavaScript
+Route::get('/api/empleados', [DashboardController::class, 'listarEmpleados']);
+Route::post('/api/empleados', [DashboardController::class, 'crearEmpleado']);
+Route::delete('/api/empleados/{id}', [DashboardController::class, 'eliminarEmpleado']);
+
+
+// ======================================================================
+// FALLBACK (SIEMPRE AL FINAL)
+// ======================================================================
 Route::fallback(function () {
     return response()->view('errors.404', [
         'title' => '404 - Página no encontrada',
@@ -72,24 +87,3 @@ Route::fallback(function () {
         'exceptionMessage' => 'Ruta no encontrada'
     ], 404);
 });
-
-// 1. Ruta para BUSCAR y LISTAR (Devuelve JSON)
-Route::get('/api/contactos/buscar', [DashboardController::class, 'buscarContactos'])->name('contactos.buscar');
-
-// 2. Ruta para ELIMINAR (Devuelve JSON)
-Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarContacto'])->name('contactos.eliminar');
-// ====================== EMPLEADOS (API + VISTA) ======================
-
-// Vista
-Route::get('/empleados', function () {
-    return view('dashboard.empleados');
-})->name('empleados');
-
-// API - Listar
-Route::get('/api/empleados', [DashboardController::class, 'listarEmpleados']);
-
-// API - Crear
-Route::post('/api/empleados', [DashboardController::class, 'crearEmpleado']);
-
-// API - Eliminar
-Route::delete('/api/empleados/{id}', [DashboardController::class, 'eliminarEmpleado']);

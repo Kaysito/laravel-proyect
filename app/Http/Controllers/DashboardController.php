@@ -25,9 +25,9 @@ class DashboardController extends Controller
     {
         // Simulamos un error 500 controlado para probar la vista de errores
         return response()->view('dashboard.error-demo', [
-            'title' => '¡Ups! Algo salió mal',
-            'message' => 'Ha ocurrido un error inesperado en el sistema.',
-            'code' => 500,
+            'title'            => '¡Ups! Algo salió mal',
+            'message'          => 'Ha ocurrido un error inesperado en el sistema.',
+            'code'             => 500,
             'exceptionMessage' => 'Simulation_Exception: Este es un mensaje de prueba generado por el controlador.'
         ], 500);
     }
@@ -71,8 +71,8 @@ class DashboardController extends Controller
     {
         // 1. Validación estricta
         $validated = $request->validate([
-            'nombre' => 'required|string|min:3|max:50',
-            'email'  => [
+            'nombre'           => 'required|string|min:3|max:50',
+            'email'            => [
                 'required',
                 'string',
                 'max:255',
@@ -83,7 +83,7 @@ class DashboardController extends Controller
             'sitio_web'        => 'nullable|url',
             'mensaje'          => 'required|string|max:255',
         ], [
-            'email.regex' => 'El formato del correo no es válido.',
+            'email.regex'             => 'El formato del correo no es válido.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.'
         ]);
 
@@ -154,49 +154,69 @@ class DashboardController extends Controller
 
         return back()->with('error', 'No se pudo encontrar la imagen para eliminar.');
     }
+
     /* =========================================================
-   5. EMPLEADOS (CRUD con Fetch)
-========================================================= */
+       5. EMPLEADOS (Vista y API CRUD)
+    ========================================================= */
 
-public function listarEmpleados()
-{
-    $empleados = DB::table('employees')
-        ->orderBy('created_at', 'desc')
-        ->get();
+    /**
+     * Muestra la vista HTML principal de empleados.
+     * Esta era la función que faltaba.
+     */
+    public function indexEmpleados()
+    {
+        return view('dashboard.empleados');
+    }
 
-    return response()->json($empleados);
-}
+    /**
+     * API: Devuelve la lista de empleados en JSON.
+     */
+    public function listarEmpleados()
+    {
+        $empleados = DB::table('employees')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-public function crearEmpleado(Request $request)
-{
-    $validated = $request->validate([
-        'nombre' => 'required|min:3',
-        'email'  => 'required|email|unique:employees,email',
-        'cargo'  => 'required|min:3',
-    ]);
+        return response()->json($empleados);
+    }
 
-    $id = DB::table('employees')->insertGetId([
-        'nombre' => $validated['nombre'],
-        'email'  => $validated['email'],
-        'cargo'  => $validated['cargo'],
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+    /**
+     * API: Crea un nuevo empleado y lo devuelve en JSON.
+     */
+    public function crearEmpleado(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|min:3',
+            'email'  => 'required|email|unique:employees,email',
+            'cargo'  => 'required|min:3',
+        ]);
 
-    return response()->json([
-        'success' => true,
-        'empleado' => [
-            'id' => $id,
-            ...$validated
-        ]
-    ]);
-}
+        $id = DB::table('employees')->insertGetId([
+            'nombre'     => $validated['nombre'],
+            'email'      => $validated['email'],
+            'cargo'      => $validated['cargo'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-public function eliminarEmpleado($id)
-{
-    DB::table('employees')->where('id', $id)->delete();
+        return response()->json([
+            'success'  => true,
+            'empleado' => [
+                'id' => $id,
+                'nombre' => $validated['nombre'],
+                'email' => $validated['email'],
+                'cargo' => $validated['cargo'],
+            ]
+        ]);
+    }
 
-    return response()->json(['success' => true]);
-}
+    /**
+     * API: Elimina un empleado.
+     */
+    public function eliminarEmpleado($id)
+    {
+        DB::table('employees')->where('id', $id)->delete();
 
+        return response()->json(['success' => true]);
+    }
 }
