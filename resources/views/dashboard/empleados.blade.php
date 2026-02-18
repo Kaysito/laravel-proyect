@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layout') {{-- <--- CAMBIO AQUÍ: Antes decía 'layouts.app' --}}
 
 @section('title', 'Gestión de Empleados')
 
@@ -74,15 +74,17 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarEmpleados();
 
     const form = document.getElementById('empleadoForm');
+    // Tu layout YA TIENE el meta csrf-token, así que esto funcionará perfecto
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     // Manejar envío del formulario
     form.addEventListener('submit', async e => {
         e.preventDefault();
 
-        // Feedback visual simple (opcional)
+        // Feedback visual simple
         const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;
+        // Nota: Tu layout tiene un script global para spinners, pero este local es más específico para este formulario
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
         btn.disabled = true;
 
@@ -133,7 +135,7 @@ async function cargarEmpleados() {
 
 function agregarFila(emp) {
     const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-50 transition-colors"; // Clase para efecto hover
+    tr.className = "hover:bg-slate-50 transition-colors";
     tr.innerHTML = `
         <td class="p-4 font-medium text-slate-900">${emp.nombre}</td>
         <td class="p-4">${emp.email}</td>
@@ -150,7 +152,6 @@ function agregarFila(emp) {
             </button>
         </td>
     `;
-    // Prepend para que el más nuevo salga arriba
     document.getElementById('empleadosBody').prepend(tr);
 }
 
@@ -169,7 +170,6 @@ async function eliminarEmpleado(id, btn) {
         });
 
         if (res.ok) {
-            // Animación simple para eliminar
             const row = btn.closest('tr');
             row.style.opacity = '0';
             setTimeout(() => row.remove(), 300);
