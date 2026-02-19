@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layout')
 @section('title', 'Iniciar Sesión')
 @section('content')
 <div class="max-w-md mx-auto bg-white p-8 rounded shadow">

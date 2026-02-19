@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layout')
 @section('title', 'Configurar 2FA')
 @section('content')
 <div class="max-w-lg mx-auto bg-white p-8 rounded shadow text-center">
