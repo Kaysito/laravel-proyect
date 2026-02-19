@@ -4,7 +4,8 @@
 <div class="max-w-md mx-auto bg-white p-8 rounded shadow">
     <h2 class="text-2xl font-bold mb-6 text-center">Login Seguro</h2>
     
-    <form action="{{ route('login') }}" method="POST">
+    {{-- CORRECCIÓN AQUÍ: Usamos 'login.attempt' que es la ruta POST --}}
+    <form action="{{ route('login.attempt') }}" method="POST">
         @csrf
         <div class="mb-4">
             <label class="block mb-2">Email</label>
