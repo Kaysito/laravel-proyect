@@ -6,75 +6,133 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
-use PragmaRX\Google2FA\Google2FA; // Librería del QR
+use Illuminate\Support\Facades\Http; // Necesario para tu lógica de Captcha
+use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
-    // ================= LOGIN Y REGISTER =================
+    // ==========================================
+    // 1. LOGIN (Con tu lógica de Captcha + Password)
+    // ==========================================
 
-    public function showLogin() { return view('auth.login'); }
-    public function showRegister() { return view('auth.register'); }
-
-    public function register(Request $request) {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'g-recaptcha-response' => 'required' // El campo del captcha
-        ]);
-
-        if (!$this->checkRecaptcha($request->input('g-recaptcha-response'))) {
-            return back()->withErrors(['captcha' => 'Por favor verifica que no eres un robot.']);
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'google2fa_secret' => null // Empieza sin 2FA
-        ]);
-
-        Auth::login($user);
-        
-        // Al registrarse, lo mandamos directo a configurar su QR
-        return redirect()->route('2fa.setup');
+    public function showLogin()
+    {
+        return view('auth.login');
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
+        // 1. Validar inputs básicos
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
             'g-recaptcha-response' => 'required'
         ]);
 
-        if (!$this->checkRecaptcha($request->input('g-recaptcha-response'))) {
-            return back()->withErrors(['captcha' => 'Fallo en la verificación de robot.']);
+        // 2. TU LÓGICA DE CAPTCHA (Integrada aquí)
+        // ------------------------------------------------------
+        // Nota: Como dijiste que es testing, si no tienes claves en el .env
+        // esto podría fallar. Si quieres saltarlo siempre, descomenta el "return true" abajo.
+        
+        if (! $this->validarCaptcha($request)) {
+             return back()->withErrors(['captcha' => 'Debes completar el captcha correctamente.']);
         }
+        // ------------------------------------------------------
 
+        // 3. Validar Credenciales (Email y Password)
         if (Auth::attempt($request->only('email', 'password'))) {
-            // Login correcto con password.
-            // El middleware se encargará de redirigir a /2fa/verify o /2fa/setup
-            return redirect()->route('home');
+            
+            // ¡LOGIN EXITOSO! Ahora verificamos si tiene 2FA
+            $user = Auth::user();
+
+            // A. Si no tiene 2FA configurado -> Mandar a configurar
+            if (is_null($user->google2fa_secret)) {
+                return redirect()->route('2fa.setup');
+            }
+
+            // B. Si ya tiene 2FA -> Mandar a verificar código QR
+            return redirect()->route('2fa.index');
         }
 
         return back()->withErrors(['email' => 'Credenciales incorrectas']);
     }
 
-    // ================= LÓGICA 2FA (QR) =================
+    // ==========================================
+    // 2. REGISTRO (También con Captcha)
+    // ==========================================
 
-    // 1. Mostrar QR para configurar (Solo primera vez)
-    public function setup2fa() {
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'g-recaptcha-response' => 'required'
+        ]);
+
+        // Validar Captcha antes de crear usuario
+        if (! $this->validarCaptcha($request)) {
+            return back()->withErrors(['captcha' => 'Error en el captcha.']);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'google2fa_secret' => null // Nulo al inicio
+        ]);
+
+        Auth::login($user);
+        
+        // Al registrarse, directo a configurar 2FA
+        return redirect()->route('2fa.setup');
+    }
+
+    // ==========================================
+    // 3. LÓGICA DE CAPTCHA (Tu código extraído)
+    // ==========================================
+
+    private function validarCaptcha($request)
+    {
+        // TRUCO PARA TESTING RÁPIDO:
+        // Si quieres que pase SIEMPRE (aunque falle Google), descomenta la siguiente línea:
+        // return true; 
+
+        try {
+            $secretKey = env('RECAPTCHA_SECRET_KEY');
+            $token = $request->input('g-recaptcha-response');
+    
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secretKey,
+                'response' => $token,
+                'remoteip' => $request->ip(),
+            ]);
+    
+            return $response->json()['success'];
+
+        } catch (\Exception $e) {
+            // Si hay error de conexión o algo raro, dejamos pasar en testing
+            return true; 
+        }
+    }
+
+    // ==========================================
+    // 4. LÓGICA 2FA (Google Authenticator)
+    // ==========================================
+
+    public function setup2fa()
+    {
         $google2fa = new Google2FA();
         $user = Auth::user();
-
-        // Generar clave secreta
         $secretKey = $google2fa->generateSecretKey();
         
-        // Guardar temporalmente en sesión para validarla antes de guardar en BD
         session(['2fa_secret_temp' => $secretKey]);
 
-        // Generar imagen QR
         $QR_Image = $google2fa->getQRCodeInline(
             config('app.name'),
             $user->email,
@@ -84,60 +142,40 @@ class AuthController extends Controller
         return view('auth.2fa_setup', compact('QR_Image', 'secretKey'));
     }
 
-    // 2. Guardar configuración 2FA
-    public function enable2fa(Request $request) {
+    public function enable2fa(Request $request)
+    {
         $request->validate(['code' => 'required']);
         $google2fa = new Google2FA();
         $secret = session('2fa_secret_temp');
 
-        // Verificar que el código que puso el usuario coincide con el QR generado
-        $valid = $google2fa->verifyKey($secret, $request->code);
-
-        if ($valid) {
+        if ($google2fa->verifyKey($secret, $request->code)) {
             $user = Auth::user();
             $user->google2fa_secret = $secret;
             $user->save();
             
-            // Marcar como verificado en sesión
             session(['2fa_verified' => true]);
             return redirect()->route('home');
         }
 
-        return back()->withErrors(['code' => 'Código incorrecto. Intenta escanear de nuevo.']);
+        return back()->withErrors(['code' => 'Código incorrecto.']);
     }
 
-    // 3. Pantalla de bloqueo (Login normal)
-    public function show2faVerify() {
+    public function show2faVerify()
+    {
         return view('auth.2fa_verify');
     }
 
-    // 4. Validar código al entrar
-    public function verify2fa(Request $request) {
+    public function verify2fa(Request $request)
+    {
         $request->validate(['code' => 'required']);
         $user = Auth::user();
         $google2fa = new Google2FA();
 
-        $valid = $google2fa->verifyKey($user->google2fa_secret, $request->code);
-
-        if ($valid) {
+        if ($google2fa->verifyKey($user->google2fa_secret, $request->code)) {
             session(['2fa_verified' => true]);
             return redirect()->route('home');
         }
 
         return back()->withErrors(['code' => 'Código inválido.']);
-    }
-
-    // ================= HELPER RECAPTCHA =================
-    private function checkRecaptcha($token) {
-        // CLAVE SECRETA DE PRUEBA DE GOOGLE (Cámbiala por la tuya en producción)
-        // Esta clave es universal para pruebas en localhost
-        $secret = '6LeIxAcTAAAAAGG-vFI1TnRWxPZ7d02FZSV8eb-o'; 
-        
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => $secret,
-            'response' => $token
-        ]);
-
-        return $response->json()['success'];
     }
 }
