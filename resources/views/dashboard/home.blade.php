@@ -1,30 +1,16 @@
 @extends('layout')
 
-@section('title', 'Inicio')
-
 @section('content')
 <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
-    {{-- HEADER (Modificado para incluir el botón de Logout) --}}
-    <div class="mb-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">
-                Bienvenido al Sistema
-            </h1>
-            <p class="text-slate-500">
-                Selecciona una herramienta:
-            </p>
-        </div>
-
-        {{-- BOTÓN DE LOGOUT (Formulario POST) --}}
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" 
-                class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-power-off"></i>
-                Cerrar Sesión
-            </button>
-        </form>
+    {{-- HEADER --}}
+    <div class="mb-10 text-center sm:text-left">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">
+            Bienvenido al Sistema
+        </h1>
+        <p class="text-slate-500">
+            Selecciona una herramienta:
+        </p>
     </div>
 
     {{-- GRID --}}
@@ -66,7 +52,7 @@
             <p class="text-sm text-slate-500 mt-1">Carrusel de fotos</p>
         </a>
 
-        {{-- EMPLEADOS --}}
+        {{-- EMPLEADOS (NUEVO) --}}
         <a href="{{ route('empleados') }}"
            class="group p-6 bg-white border border-slate-200 rounded-xl shadow-sm
                   hover:shadow-md hover:border-violet-500 transition-all
@@ -92,7 +78,7 @@
             <p class="text-sm text-slate-500 mt-1">Simulación 404 / 500</p>
         </a>
 
-        {{-- FORMULARIO PRO --}}
+        {{-- FORMULARIO PRO (DESTACADO) --}}
         <a href="{{ route('formulario') }}"
            class="group sm:col-span-2 lg:col-span-3 p-6 bg-gradient-to-r from-blue-50 to-indigo-50
                   border border-blue-200 rounded-xl shadow-sm
@@ -115,15 +101,13 @@
 
     </div>
 
-    {{-- FOOTER (También funcional con formulario oculto) --}}
+    {{-- FOOTER --}}
     <div class="mt-10 text-center sm:text-left">
-        <form action="{{ route('logout') }}" method="POST" class="inline">
-            @csrf
-            <button type="submit" class="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition-colors">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                Salir
-            </button>
-        </form>
+        <a href="/"
+           class="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition-colors">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Salir
+        </a>
     </div>
 
 </div>
