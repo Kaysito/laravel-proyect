@@ -4,7 +4,7 @@
 <div class="max-w-md mx-auto bg-white p-8 rounded shadow">
     <h2 class="text-2xl font-bold mb-6 text-center">Login Seguro</h2>
     
-    {{-- CORRECCIÓN AQUÍ: Usamos 'login.attempt' que es la ruta POST --}}
+    {{-- Formulario apuntando a la ruta POST correcta --}}
     <form action="{{ route('login.attempt') }}" method="POST">
         @csrf
         <div class="mb-4">
@@ -16,10 +16,11 @@
             <input type="password" name="password" class="w-full border p-2 rounded" required>
         </div>
 
-        {{-- RECAPTCHA --}}
+        {{-- RECAPTCHA CORREGIDO: Usa la variable dinámica del controlador --}}
         <div class="mb-4 flex justify-center">
-            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+            <div class="g-recaptcha" data-sitekey="{{ $siteKey }}"></div>
         </div>
+        
         @error('captcha') <p class="text-red-500 text-sm mb-4">{{ $message }}</p> @enderror
         @error('email') <p class="text-red-500 text-sm mb-4">{{ $message }}</p> @enderror
 

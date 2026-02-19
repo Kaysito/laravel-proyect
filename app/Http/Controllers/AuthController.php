@@ -6,18 +6,19 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http; // Necesario para tu lógica de Captcha
+use Illuminate\Support\Facades\Http; // Necesario para la petición a Google
 use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
     // ==========================================
-    // 1. LOGIN (Con tu lógica de Captcha + Password)
+    // 1. LOGIN (Con Captcha dinámico + Password)
     // ==========================================
 
     public function showLogin()
     {
-        return view('auth.login');
+        // Pasamos la Site Key a la vista para que el widget se renderice bien
+        return view('auth.login', ['siteKey' => env('RECAPTCHA_SITE_KEY')]);
     }
 
     public function login(Request $request)
@@ -29,20 +30,15 @@ class AuthController extends Controller
             'g-recaptcha-response' => 'required'
         ]);
 
-        // 2. TU LÓGICA DE CAPTCHA (Integrada aquí)
-        // ------------------------------------------------------
-        // Nota: Como dijiste que es testing, si no tienes claves en el .env
-        // esto podría fallar. Si quieres saltarlo siempre, descomenta el "return true" abajo.
-        
+        // 2. LÓGICA DE CAPTCHA
         if (! $this->validarCaptcha($request)) {
              return back()->withErrors(['captcha' => 'Debes completar el captcha correctamente.']);
         }
-        // ------------------------------------------------------
 
         // 3. Validar Credenciales (Email y Password)
         if (Auth::attempt($request->only('email', 'password'))) {
             
-            // ¡LOGIN EXITOSO! Ahora verificamos si tiene 2FA
+            // Login exitoso, ahora verificamos el estado del 2FA
             $user = Auth::user();
 
             // A. Si no tiene 2FA configurado -> Mandar a configurar
@@ -58,12 +54,12 @@ class AuthController extends Controller
     }
 
     // ==========================================
-    // 2. REGISTRO (También con Captcha)
+    // 2. REGISTRO (Con Captcha dinámico)
     // ==========================================
 
     public function showRegister()
     {
-        return view('auth.register');
+        return view('auth.register', ['siteKey' => env('RECAPTCHA_SITE_KEY')]);
     }
 
     public function register(Request $request)
@@ -94,15 +90,11 @@ class AuthController extends Controller
     }
 
     // ==========================================
-    // 3. LÓGICA DE CAPTCHA (Tu código extraído)
+    // 3. LÓGICA DE CAPTCHA (Usando .env)
     // ==========================================
 
     private function validarCaptcha($request)
     {
-        // TRUCO PARA TESTING RÁPIDO:
-        // Si quieres que pase SIEMPRE (aunque falle Google), descomenta la siguiente línea:
-        // return true; 
-
         try {
             $secretKey = env('RECAPTCHA_SECRET_KEY');
             $token = $request->input('g-recaptcha-response');
@@ -116,7 +108,8 @@ class AuthController extends Controller
             return $response->json()['success'];
 
         } catch (\Exception $e) {
-            // Si hay error de conexión o algo raro, dejamos pasar en testing
+            // En caso de error de conexión con Google, permitimos el paso (Fail-Open)
+            // para no bloquear a los usuarios en producción si Google se cae.
             return true; 
         }
     }
@@ -129,10 +122,14 @@ class AuthController extends Controller
     {
         $google2fa = new Google2FA();
         $user = Auth::user();
+        
+        // Generar clave secreta
         $secretKey = $google2fa->generateSecretKey();
         
+        // Guardar temporalmente en sesión
         session(['2fa_secret_temp' => $secretKey]);
 
+        // Generar QR visual
         $QR_Image = $google2fa->getQRCodeInline(
             config('app.name'),
             $user->email,
@@ -145,19 +142,21 @@ class AuthController extends Controller
     public function enable2fa(Request $request)
     {
         $request->validate(['code' => 'required']);
+        
         $google2fa = new Google2FA();
         $secret = session('2fa_secret_temp');
 
+        // Verificar el código ingresado contra el secreto temporal
         if ($google2fa->verifyKey($secret, $request->code)) {
             $user = Auth::user();
-            $user->google2fa_secret = $secret;
+            $user->google2fa_secret = $secret; // Guardar secreto definitivo en BD
             $user->save();
             
-            session(['2fa_verified' => true]);
+            session(['2fa_verified' => true]); // Marcar sesión como verificada
             return redirect()->route('home');
         }
 
-        return back()->withErrors(['code' => 'Código incorrecto.']);
+        return back()->withErrors(['code' => 'Código incorrecto. Intenta de nuevo.']);
     }
 
     public function show2faVerify()
@@ -168,11 +167,13 @@ class AuthController extends Controller
     public function verify2fa(Request $request)
     {
         $request->validate(['code' => 'required']);
+        
         $user = Auth::user();
         $google2fa = new Google2FA();
 
+        // Verificar código contra el secreto guardado en BD
         if ($google2fa->verifyKey($user->google2fa_secret, $request->code)) {
-            session(['2fa_verified' => true]);
+            session(['2fa_verified' => true]); // Éxito
             return redirect()->route('home');
         }
 
