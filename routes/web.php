@@ -6,15 +6,19 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Session\Middleware\StartSession;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+// 1. RUTAS DE INVITADO (Login y Registro)
+Route::middleware('guest')->controller(AuthController::class)->group(function () {
+    Route::get('/', 'showLogin')->name('login');
+    Route::post('/login', 'login')->name('login.attempt');
 
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/register', 'showRegister')->name('register');
+    Route::post('/register', 'register');
 });
 
+// 2. RUTAS AUTENTICADAS (Requieren sesión iniciada)
 Route::middleware('auth')->group(function () {
+    
+    // Cierre de sesión seguro
     Route::post('/logout', function (Request $request) {
         auth()->logout();
         $request->session()->invalidate();
@@ -22,40 +26,56 @@ Route::middleware('auth')->group(function () {
         return redirect('/');
     })->name('logout');
 
-    Route::get('/2fa/setup', [AuthController::class, 'setup2fa'])->name('2fa.setup');
-    Route::post('/2fa/setup', [AuthController::class, 'enable2fa'])->name('2fa.enable');
-
-    Route::get('/2fa/verify', [AuthController::class, 'show2faVerify'])->name('2fa.index');
-    Route::post('/2fa/verify', [AuthController::class, 'verify2fa'])->name('2fa.verify');
+    // Configuración y verificación 2FA
+    Route::controller(AuthController::class)->prefix('2fa')->group(function () {
+        Route::get('/setup', 'setup2fa')->name('2fa.setup');
+        Route::post('/setup', 'enable2fa')->name('2fa.enable');
+        
+        Route::get('/verify', 'show2faVerify')->name('2fa.index');
+        Route::post('/verify', 'verify2fa')->name('2fa.verify');
+    });
 });
 
-Route::middleware(['auth', '2fa'])->group(function () {
-    Route::get('/home', [DashboardController::class, 'index'])->name('home');
+// 3. RUTAS PROTEGIDAS (Autenticación + Verificación 2FA completada)
+Route::middleware(['auth', '2fa'])->controller(DashboardController::class)->group(function () {
+    
+    // Dashboard Base
+    Route::get('/home', 'index')->name('home');
     Route::redirect('/dashboard', '/home');
 
-    Route::get('/calculadora', [DashboardController::class, 'calculadora'])->name('calculadora');
+    // Herramientas y Utilidades
+    Route::get('/calculadora', 'calculadora')->name('calculadora');
+    
+    Route::get('/clicker', 'clicker')->name('clicker');
+    Route::post('/guardar-click', 'storeClick')->name('guardar.click');
 
-    Route::get('/clicker', [DashboardController::class, 'clicker'])->name('clicker');
-    Route::post('/guardar-click', [DashboardController::class, 'storeClick'])->name('guardar.click');
-
-    Route::get('/carrusel', [DashboardController::class, 'carrusel'])->name('carrusel');
-    Route::post('/carrusel/subir', [DashboardController::class, 'subirFoto'])->name('carrusel.subir');
-    Route::delete('/carrusel/eliminar/{id}', [DashboardController::class, 'eliminarFoto'])->name('carrusel.eliminar');
-
-    Route::get('/formulario', [DashboardController::class, 'formulario'])->name('formulario');
-    Route::post('/validar-formulario', [DashboardController::class, 'validarFormulario'])->name('formulario.validar');
+    // Formulario
+    Route::get('/formulario', 'formulario')->name('formulario');
+    Route::post('/validar-formulario', 'validarFormulario')->name('formulario.validar');
     Route::get('/validar-formulario', function() { return redirect()->route('formulario'); });
 
-    Route::get('/empleados', [DashboardController::class, 'indexEmpleados'])->name('empleados');
-    Route::get('/api/empleados', [DashboardController::class, 'listarEmpleados']);
-    Route::post('/api/empleados', [DashboardController::class, 'crearEmpleado']);
-    Route::put('/api/empleados/{id}', [DashboardController::class, 'actualizarEmpleado']);
-    Route::delete('/api/empleados/{id}', [DashboardController::class, 'eliminarEmpleado']);
+    // Carrusel de Fotos
+    Route::prefix('carrusel')->group(function () {
+        Route::get('/', 'carrusel')->name('carrusel');
+        Route::post('/subir', 'subirFoto')->name('carrusel.subir');
+        Route::delete('/eliminar/{id}', 'eliminarFoto')->name('carrusel.eliminar');
+    });
 
-    Route::get('/api/contactos/buscar', [DashboardController::class, 'buscarContactos'])->name('contactos.buscar');
-    Route::delete('/api/contactos/{id}', [DashboardController::class, 'eliminarContacto'])->name('contactos.eliminar');
+    // API Interna y Vista de Empleados/Contactos
+    Route::get('/empleados', 'indexEmpleados')->name('empleados');
+    
+    Route::prefix('api')->group(function () {
+        Route::get('/empleados', 'listarEmpleados');
+        Route::post('/empleados', 'crearEmpleado');
+        Route::put('/empleados/{id}', 'actualizarEmpleado');
+        Route::delete('/empleados/{id}', 'eliminarEmpleado');
+
+        Route::get('/contactos/buscar', 'buscarContactos')->name('contactos.buscar');
+        Route::delete('/contactos/{id}', 'eliminarContacto')->name('contactos.eliminar');
+    });
 });
 
+// 4. RUTAS DE ERRORES (Públicas)
 Route::get('/error-demo', [DashboardController::class, 'errorDemo'])
     ->name('error.demo')
     ->withoutMiddleware([StartSession::class]);

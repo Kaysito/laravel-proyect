@@ -101,10 +101,18 @@
 
     </div>
 
-    {{-- FOOTER --}}
+    {{-- FOOTER (LOGOUT SEGURO) --}}
     <div class="mt-10 text-center sm:text-left">
-        <a href="/"
-           class="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition-colors">
+        
+        {{-- Formulario oculto protegido con CSRF --}}
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+            @csrf
+        </form>
+
+        {{-- El botón que ejecuta el formulario mediante JavaScript --}}
+        <a href="#" 
+           onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+           class="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition-colors cursor-pointer">
             <i class="fa-solid fa-right-from-bracket"></i>
             Salir
         </a>
