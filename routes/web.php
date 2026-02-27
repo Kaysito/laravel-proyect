@@ -49,11 +49,6 @@ Route::middleware(['auth', '2fa'])->controller(DashboardController::class)->grou
     Route::get('/clicker', 'clicker')->name('clicker');
     Route::post('/guardar-click', 'storeClick')->name('guardar.click');
 
-    // Formulario
-    Route::get('/formulario', 'formulario')->name('formulario');
-    Route::post('/validar-formulario', 'validarFormulario')->name('formulario.validar');
-    Route::get('/validar-formulario', function() { return redirect()->route('formulario'); });
-
     // Carrusel de Fotos
     Route::prefix('carrusel')->group(function () {
         Route::get('/', 'carrusel')->name('carrusel');

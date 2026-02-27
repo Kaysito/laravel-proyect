@@ -52,7 +52,7 @@
             <p class="text-sm text-slate-500 mt-1">Carrusel de fotos</p>
         </a>
 
-        {{-- EMPLEADOS (NUEVO) --}}
+        {{-- EMPLEADOS --}}
         <a href="{{ route('empleados') }}"
            class="group p-6 bg-white border border-slate-200 rounded-xl shadow-sm
                   hover:shadow-md hover:border-violet-500 transition-all
@@ -78,20 +78,15 @@
             <p class="text-sm text-slate-500 mt-1">Simulación 404 / 500</p>
         </a>
 
-        {{-- FORMULARIO PRO (DESTACADO) --}}
-        
-
     </div>
 
     {{-- FOOTER (LOGOUT SEGURO) --}}
     <div class="mt-10 text-center sm:text-left">
         
-        {{-- Formulario oculto protegido con CSRF --}}
         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
             @csrf
         </form>
 
-        {{-- El botón que ejecuta el formulario mediante JavaScript --}}
         <a href="#" 
            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
            class="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition-colors cursor-pointer">
