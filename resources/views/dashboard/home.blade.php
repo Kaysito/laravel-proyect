@@ -79,25 +79,7 @@
         </a>
 
         {{-- FORMULARIO PRO (DESTACADO) --}}
-        <a href="{{ route('formulario') }}"
-           class="group sm:col-span-2 lg:col-span-3 p-6 bg-gradient-to-r from-blue-50 to-indigo-50
-                  border border-blue-200 rounded-xl shadow-sm
-                  hover:shadow-md hover:border-blue-600 transition-all
-                  focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <div class="flex items-center justify-center sm:justify-start gap-4">
-                <div class="text-blue-600 text-4xl group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-800 text-lg">
-                        Formulario Pro
-                    </h3>
-                    <p class="text-sm text-slate-600 mt-1">
-                        Validación estricta, dominios modernos y UX avanzada
-                    </p>
-                </div>
-            </div>
-        </a>
+        
 
     </div>
 
