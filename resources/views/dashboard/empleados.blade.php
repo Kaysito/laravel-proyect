@@ -26,18 +26,29 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Nombre</label>
-                    <input type="text" name="nombre" id="inputNombre" placeholder="Ej. Juan Pérez" required
+                    <input type="text" name="nombre" id="inputNombre" placeholder="Ej. Juan Pérez" 
+                        required 
+                        maxlength="50" 
+                        pattern="^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$" 
+                        title="Solo se permiten letras y espacios (sin números ni símbolos)"
                         class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Máx. 50 caracteres, solo letras.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Email</label>
-                    <input type="email" name="email" id="inputEmail" placeholder="juan@ejemplo.com" required
+                    <input type="email" name="email" id="inputEmail" placeholder="juan@ejemplo.com" 
+                        required 
+                        maxlength="80"
                         class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Máx. 80 caracteres.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Cargo</label>
-                    <input type="text" name="cargo" id="inputCargo" placeholder="Ej. Desarrollador" required
+                    <input type="text" name="cargo" id="inputCargo" placeholder="Ej. Desarrollador" 
+                        required 
+                        maxlength="50"
                         class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Máx. 50 caracteres.</p>
                 </div>
             </div>
 
@@ -72,7 +83,7 @@
                 </tbody>
             </table>
             
-            {{-- 3. CONTROLES DE PAGINACIÓN (Oculto si hay menos de 10) --}}
+            {{-- 3. CONTROLES DE PAGINACIÓN --}}
             <div id="paginacionControles" class="bg-slate-50 px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6 hidden">
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
@@ -82,7 +93,7 @@
                     </div>
                     <div>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination" id="paginacionBotones">
-                            {{-- JS genera los botones de 1, 2, 3 aquí --}}
+                            {{-- JS genera los botones aquí --}}
                         </nav>
                     </div>
                 </div>
@@ -115,6 +126,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(form);
         const dataObject = Object.fromEntries(formData); 
+        
+        // Validación extra de JS por seguridad
+        const regexNombre = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/;
+        if (!regexNombre.test(dataObject.nombre) || dataObject.nombre.length > 50) {
+            alert('El nombre es inválido. Recuerda: solo letras, espacios y máximo 50 caracteres.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        if (dataObject.cargo.length > 50 || dataObject.email.length > 80) {
+            alert('Has superado el límite de caracteres en Cargo o Email.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
         
         let url = '/api/empleados';
         let method = 'POST';
@@ -158,10 +185,7 @@ async function cargarEmpleados() {
     try {
         const res = await fetch('/api/empleados');
         const data = await res.json();
-        
-        // Invertimos el array para que los nuevos empleados salgan primero (comportamiento similar a tu prepend original)
         todosLosEmpleados = data.reverse(); 
-        
         renderizarTabla();
     } catch (error) { console.error(error); }
 }
@@ -170,7 +194,6 @@ function renderizarTabla() {
     const tbody = document.getElementById('empleadosBody');
     tbody.innerHTML = ''; 
 
-    // Calculamos qué parte del array mostrar
     const indiceInicio = (paginaActual - 1) * empleadosPorPagina;
     const indiceFin = indiceInicio + empleadosPorPagina;
     const empleadosPagina = todosLosEmpleados.slice(indiceInicio, indiceFin);
@@ -183,7 +206,6 @@ function agregarFila(emp) {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-50 transition-colors";
     
-    // Escapar comillas para evitar que nombres como "D'Angelo" rompan el botón editar
     const nombreEscapado = emp.nombre.replace(/'/g, "\\'");
     const emailEscapado = emp.email.replace(/'/g, "\\'");
     const cargoEscapado = emp.cargo.replace(/'/g, "\\'");
@@ -230,19 +252,25 @@ function actualizarPaginacion() {
     document.getElementById('infoFin').innerText = fin;
     document.getElementById('infoTotal').innerText = totalEmpleados;
 
-    const btnAnterior = crearBotonPaginacion('<i class="fa-solid fa-chevron-left"></i>', paginaActual > 1 ? paginaActual - 1 : 1, paginaActual === 1);
+    const btnPrimero = crearBotonPaginacion('<i class="fa-solid fa-angles-left"></i>', 1, paginaActual === 1, false, 'primero');
+    botonesContainer.appendChild(btnPrimero);
+
+    const btnAnterior = crearBotonPaginacion('<i class="fa-solid fa-chevron-left"></i>', paginaActual > 1 ? paginaActual - 1 : 1, paginaActual === 1, false, 'medio');
     botonesContainer.appendChild(btnAnterior);
 
     for (let i = 1; i <= totalPaginas; i++) {
-        const btnNumero = crearBotonPaginacion(i, i, false, i === paginaActual);
+        const btnNumero = crearBotonPaginacion(i, i, false, i === paginaActual, 'medio');
         botonesContainer.appendChild(btnNumero);
     }
 
-    const btnSiguiente = crearBotonPaginacion('<i class="fa-solid fa-chevron-right"></i>', paginaActual < totalPaginas ? paginaActual + 1 : totalPaginas, paginaActual === totalPaginas);
+    const btnSiguiente = crearBotonPaginacion('<i class="fa-solid fa-chevron-right"></i>', paginaActual < totalPaginas ? paginaActual + 1 : totalPaginas, paginaActual === totalPaginas, false, 'medio');
     botonesContainer.appendChild(btnSiguiente);
+
+    const btnUltimo = crearBotonPaginacion('<i class="fa-solid fa-angles-right"></i>', totalPaginas, paginaActual === totalPaginas, false, 'ultimo');
+    botonesContainer.appendChild(btnUltimo);
 }
 
-function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activo = false) {
+function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activo = false, posicion = 'medio') {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = texto;
@@ -260,6 +288,9 @@ function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activ
             renderizarTabla();
         };
     }
+
+    if (posicion === 'primero') clasesBase += "rounded-l-md ";
+    if (posicion === 'ultimo') clasesBase += "rounded-r-md ";
 
     btn.className = clasesBase;
     return btn;
