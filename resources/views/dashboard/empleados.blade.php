@@ -6,68 +6,18 @@
 @section('content')
     <div class="space-y-6 text-left">
         
-        {{-- Encabezado --}}
-        <div class="border-b border-slate-200 pb-4">
-            <h2 class="text-2xl font-bold text-slate-800">Directorio</h2>
-            <p class="text-slate-500 text-sm">Gestiona los empleados de la plataforma.</p>
+        {{-- Encabezado y Botón de Nuevo --}}
+        <div class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">Directorio</h2>
+                <p class="text-slate-500 text-sm">Gestiona los empleados de la plataforma.</p>
+            </div>
+            <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center">
+                <i class="fa-solid fa-plus mr-2"></i> Nuevo Empleado
+            </button>
         </div>
 
-        {{-- 1. FORMULARIO --}}
-        <form id="empleadoForm" class="bg-slate-50 p-6 rounded-lg border border-slate-200 shadow-sm relative transition-colors duration-300">
-            
-            {{-- Título dinámico del formulario --}}
-            <h3 id="formTitle" class="text-sm font-bold text-indigo-600 mb-4 uppercase tracking-wide">
-                <i class="fa-solid fa-plus mr-1"></i> Nuevo Empleado
-            </h3>
-
-            {{-- Input oculto para guardar el ID cuando editamos --}}
-            <input type="hidden" id="editId">
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Nombre</label>
-                    <input type="text" name="nombre" id="inputNombre" placeholder="Ej. Juan Pérez" 
-                        required 
-                        maxlength="50" 
-                        pattern="^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$" 
-                        title="Solo se permiten letras y espacios (sin números ni símbolos)"
-                        class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Máx. 50 caracteres, solo letras.</p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Email</label>
-                    <input type="email" name="email" id="inputEmail" placeholder="juan@ejemplo.com" 
-                        required 
-                        maxlength="80"
-                        class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Máx. 80 caracteres.</p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Cargo</label>
-                    <input type="text" name="cargo" id="inputCargo" placeholder="Ej. Desarrollador" 
-                        required 
-                        maxlength="50"
-                        class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Máx. 50 caracteres.</p>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2">
-                {{-- Botón Cancelar (Oculto por defecto) --}}
-                <button type="button" id="btnCancelar" onclick="resetearFormulario()"
-                    class="hidden bg-slate-300 hover:bg-slate-400 text-slate-700 font-semibold py-2 px-6 rounded shadow transition-colors">
-                    Cancelar
-                </button>
-
-                {{-- Botón Guardar --}}
-                <button type="submit" id="btnSubmit"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded shadow transition-colors flex items-center justify-center">
-                    <i class="fa-solid fa-save mr-2"></i> Guardar Empleado
-                </button>
-            </div>
-        </form>
-
-        {{-- 2. TABLA --}}
+        {{-- TABLA --}}
         <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm bg-white">
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-xs">
@@ -83,23 +33,87 @@
                 </tbody>
             </table>
             
-            {{-- 3. CONTROLES DE PAGINACIÓN --}}
+            {{-- CONTROLES DE PAGINACIÓN SIMPLIFICADOS --}}
             <div id="paginacionControles" class="bg-slate-50 px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6 hidden">
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p class="text-sm text-slate-700">
-                            Mostrando <span id="infoInicio" class="font-bold text-indigo-600"></span> a <span id="infoFin" class="font-bold text-indigo-600"></span> de <span id="infoTotal" class="font-bold text-indigo-600"></span> empleados
+                            Mostrando <span id="infoInicio" class="font-bold text-indigo-600"></span> a <span id="infoFin" class="font-bold text-indigo-600"></span> de <span id="infoTotal" class="font-bold text-indigo-600"></span>
                         </p>
                     </div>
                     <div>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination" id="paginacionBotones">
-                            {{-- JS genera los botones aquí --}}
+                            {{-- JS genera solo 4 botones aquí --}}
                         </nav>
                     </div>
                 </div>
             </div>
         </div>
 
+    </div>
+
+    {{-- MODAL OVERLAY --}}
+    <div id="modalEmpleado" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity">
+        
+        {{-- CAJA DEL MODAL --}}
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden transform transition-all">
+            
+            {{-- HEADER DEL MODAL --}}
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 id="formTitle" class="text-sm font-bold text-indigo-600 uppercase tracking-wide">
+                    <i class="fa-solid fa-plus mr-1"></i> Nuevo Empleado
+                </h3>
+                <button type="button" onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            {{-- FORMULARIO --}}
+            <form id="empleadoForm" class="p-6">
+                <input type="hidden" id="editId">
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Nombre</label>
+                        <input type="text" name="nombre" id="inputNombre" placeholder="Ej. Juan Pérez" 
+                            required maxlength="50" pattern="^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$" 
+                            title="Solo letras y espacios"
+                            class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Email</label>
+                        <input type="email" name="email" id="inputEmail" placeholder="juan@ejemplo.com" 
+                            required maxlength="80"
+                            class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Cargo</label>
+                        <input type="text" name="cargo" id="inputCargo" placeholder="Ej. Desarrollador" 
+                            required maxlength="50"
+                            class="w-full p-2 border border-slate-300 rounded focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                </div>
+
+                {{-- FOOTER DEL MODAL (BOTONES) --}}
+                <div class="flex justify-end gap-2 mt-8 pt-4 border-t border-slate-100">
+                    {{-- Botón Eliminar (Solo se muestra al editar) --}}
+                    <button type="button" id="btnModalEliminar" onclick="eliminarDesdeModal()"
+                        class="hidden bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded shadow-sm transition-colors mr-auto">
+                        <i class="fa-solid fa-trash mr-1"></i> Borrar
+                    </button>
+
+                    <button type="button" onclick="cerrarModal()"
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded shadow-sm transition-colors">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" id="btnSubmit"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded shadow transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-save mr-2"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 @endsection
 
@@ -108,7 +122,7 @@
 let editMode = false;
 let todosLosEmpleados = []; 
 let paginaActual = 1;
-const empleadosPorPagina = 10; 
+const empleadosPorPagina = 5; // REDUCIDO A 5
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarEmpleados();
@@ -127,17 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(form);
         const dataObject = Object.fromEntries(formData); 
         
-        // Validación extra de JS por seguridad
         const regexNombre = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/;
         if (!regexNombre.test(dataObject.nombre) || dataObject.nombre.length > 50) {
             alert('El nombre es inválido. Recuerda: solo letras, espacios y máximo 50 caracteres.');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            return;
-        }
-
-        if (dataObject.cargo.length > 50 || dataObject.email.length > 80) {
-            alert('Has superado el límite de caracteres en Cargo o Email.');
             btn.innerHTML = originalText;
             btn.disabled = false;
             return;
@@ -163,13 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(dataObject)
             });
 
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Error en la petición');
-            }
+            if (!res.ok) throw new Error('Error en la petición');
 
             await cargarEmpleados(); 
-            resetearFormulario();
+            cerrarModal(); // Cierra y limpia al guardar con éxito
 
         } catch (error) {
             console.error(error);
@@ -204,11 +207,14 @@ function renderizarTabla() {
 
 function agregarFila(emp) {
     const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-50 transition-colors";
+    tr.className = "hover:bg-slate-50 transition-colors cursor-pointer";
     
     const nombreEscapado = emp.nombre.replace(/'/g, "\\'");
     const emailEscapado = emp.email.replace(/'/g, "\\'");
     const cargoEscapado = emp.cargo.replace(/'/g, "\\'");
+
+    // Ahora toda la fila es clickeable para abrir el modal de edición rápido
+    tr.onclick = () => prepararEdicion(emp.id, nombreEscapado, emailEscapado, cargoEscapado);
 
     tr.innerHTML = `
         <td class="p-4 font-medium text-slate-900">${emp.nombre}</td>
@@ -216,16 +222,9 @@ function agregarFila(emp) {
         <td class="p-4">
             <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">${emp.cargo}</span>
         </td>
-        <td class="p-4 text-center space-x-2">
-            <button type="button" class="text-amber-500 hover:text-amber-700 hover:bg-amber-50 p-2 rounded-full transition"
-                onclick="prepararEdicion(${emp.id}, '${nombreEscapado}', '${emailEscapado}', '${cargoEscapado}')"
-                title="Editar">
+        <td class="p-4 text-center">
+            <button type="button" class="text-amber-500 hover:text-amber-700 hover:bg-amber-50 p-2 rounded-full transition" title="Editar">
                 <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button type="button" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition" 
-                onclick="eliminarEmpleado(${emp.id})"
-                title="Eliminar">
-                <i class="fa-solid fa-trash"></i>
             </button>
         </td>
     `;
@@ -252,25 +251,19 @@ function actualizarPaginacion() {
     document.getElementById('infoFin').innerText = fin;
     document.getElementById('infoTotal').innerText = totalEmpleados;
 
-    const btnPrimero = crearBotonPaginacion('<i class="fa-solid fa-angles-left"></i>', 1, paginaActual === 1, false, 'primero');
+    // SOLO 4 BOTONES DE NAVEGACIÓN
+    const btnPrimero = crearBotonPaginacion('<i class="fa-solid fa-angles-left"></i>', 1, paginaActual === 1, 'primero');
+    const btnAnterior = crearBotonPaginacion('<i class="fa-solid fa-chevron-left"></i>', paginaActual > 1 ? paginaActual - 1 : 1, paginaActual === 1, 'medio');
+    const btnSiguiente = crearBotonPaginacion('<i class="fa-solid fa-chevron-right"></i>', paginaActual < totalPaginas ? paginaActual + 1 : totalPaginas, paginaActual === totalPaginas, 'medio');
+    const btnUltimo = crearBotonPaginacion('<i class="fa-solid fa-angles-right"></i>', totalPaginas, paginaActual === totalPaginas, 'ultimo');
+
     botonesContainer.appendChild(btnPrimero);
-
-    const btnAnterior = crearBotonPaginacion('<i class="fa-solid fa-chevron-left"></i>', paginaActual > 1 ? paginaActual - 1 : 1, paginaActual === 1, false, 'medio');
     botonesContainer.appendChild(btnAnterior);
-
-    for (let i = 1; i <= totalPaginas; i++) {
-        const btnNumero = crearBotonPaginacion(i, i, false, i === paginaActual, 'medio');
-        botonesContainer.appendChild(btnNumero);
-    }
-
-    const btnSiguiente = crearBotonPaginacion('<i class="fa-solid fa-chevron-right"></i>', paginaActual < totalPaginas ? paginaActual + 1 : totalPaginas, paginaActual === totalPaginas, false, 'medio');
     botonesContainer.appendChild(btnSiguiente);
-
-    const btnUltimo = crearBotonPaginacion('<i class="fa-solid fa-angles-right"></i>', totalPaginas, paginaActual === totalPaginas, false, 'ultimo');
     botonesContainer.appendChild(btnUltimo);
 }
 
-function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activo = false, posicion = 'medio') {
+function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, posicion = 'medio') {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = texto;
@@ -279,8 +272,6 @@ function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activ
     
     if (deshabilitado) {
         clasesBase += "border-slate-300 text-slate-300 bg-slate-50 cursor-not-allowed ";
-    } else if (activo) {
-        clasesBase += "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 cursor-default font-bold ";
     } else {
         clasesBase += "bg-white border-slate-300 text-slate-500 hover:bg-slate-50 cursor-pointer ";
         btn.onclick = () => {
@@ -296,6 +287,17 @@ function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, activ
     return btn;
 }
 
+// === FUNCIONES DEL MODAL ===
+function abrirModalNuevo() {
+    resetearFormulario(); // Asegura que esté limpio
+    document.getElementById('modalEmpleado').classList.remove('hidden');
+}
+
+function cerrarModal() {
+    document.getElementById('modalEmpleado').classList.add('hidden');
+    resetearFormulario();
+}
+
 function prepararEdicion(id, nombre, email, cargo) {
     editMode = true;
     document.getElementById('editId').value = id;
@@ -303,10 +305,7 @@ function prepararEdicion(id, nombre, email, cargo) {
     document.getElementById('inputEmail').value = email;
     document.getElementById('inputCargo').value = cargo;
 
-    const form = document.getElementById('empleadoForm');
-    form.classList.remove('bg-slate-50', 'border-slate-200');
-    form.classList.add('bg-amber-50', 'border-amber-200'); 
-
+    // Cambiar aspecto del modal a "Edición"
     document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square mr-1"></i> Editando Empleado';
     document.getElementById('formTitle').className = "text-sm font-bold text-amber-600 mb-4 uppercase tracking-wide";
 
@@ -315,8 +314,10 @@ function prepararEdicion(id, nombre, email, cargo) {
     btnSubmit.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
     btnSubmit.classList.add('bg-amber-600', 'hover:bg-amber-700');
 
-    document.getElementById('btnCancelar').classList.remove('hidden');
-    form.scrollIntoView({ behavior: 'smooth' });
+    // Mostrar el botón de Eliminar
+    document.getElementById('btnModalEliminar').classList.remove('hidden');
+
+    document.getElementById('modalEmpleado').classList.remove('hidden');
 }
 
 function resetearFormulario() {
@@ -324,23 +325,23 @@ function resetearFormulario() {
     document.getElementById('empleadoForm').reset();
     document.getElementById('editId').value = '';
 
-    const form = document.getElementById('empleadoForm');
-    form.classList.add('bg-slate-50', 'border-slate-200');
-    form.classList.remove('bg-amber-50', 'border-amber-200');
-
+    // Restaurar aspecto a "Nuevo"
     document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-plus mr-1"></i> Nuevo Empleado';
     document.getElementById('formTitle').className = "text-sm font-bold text-indigo-600 mb-4 uppercase tracking-wide";
 
     const btnSubmit = document.getElementById('btnSubmit');
-    btnSubmit.innerHTML = '<i class="fa-solid fa-save mr-2"></i> Guardar Empleado';
+    btnSubmit.innerHTML = '<i class="fa-solid fa-save mr-2"></i> Guardar';
     btnSubmit.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
     btnSubmit.classList.remove('bg-amber-600', 'hover:bg-amber-700');
 
-    document.getElementById('btnCancelar').classList.add('hidden');
+    // Ocultar el botón de Eliminar
+    document.getElementById('btnModalEliminar').classList.add('hidden');
 }
 
-async function eliminarEmpleado(id) {
-    if(!confirm('¿Estás seguro de eliminar este empleado?')) return;
+async function eliminarDesdeModal() {
+    const id = document.getElementById('editId').value;
+    if(!confirm('¿Estás seguro de eliminar este empleado? Esta acción no se puede deshacer.')) return;
+    
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     try {
         const res = await fetch(`/api/empleados/${id}`, {
@@ -352,6 +353,7 @@ async function eliminarEmpleado(id) {
                 paginaActual--;
             }
             await cargarEmpleados(); 
+            cerrarModal(); // Cierra el modal tras borrar exitosamente
         }
     } catch (error) { console.error(error); }
 }
