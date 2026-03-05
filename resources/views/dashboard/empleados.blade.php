@@ -18,12 +18,13 @@
                 </button>
             </div>
             
-            {{-- BARRA DE BÚSQUEDA PRO --}}
+            {{-- BARRA DE BÚSQUEDA PRO (Con Límite de 50 caracteres) --}}
             <div class="relative max-w-md w-full mt-2">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                 </div>
                 <input type="text" id="inputBuscador" placeholder="Buscar por nombre, email o cargo..." 
+                    maxlength="50"
                     class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all shadow-sm">
             </div>
         </div>
@@ -124,7 +125,7 @@
 <script>
 let editMode = false;
 let todosLosEmpleados = []; 
-let empleadosFiltrados = []; // NUEVO: Array para manejar la búsqueda
+let empleadosFiltrados = []; 
 let paginaActual = 1;
 const empleadosPorPagina = 5;
 
@@ -133,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Evento del Buscador en tiempo real
     document.getElementById('inputBuscador').addEventListener('input', () => {
-        paginaActual = 1; // Siempre regresamos a la página 1 al buscar algo nuevo
+        paginaActual = 1; 
         aplicarFiltro();
     });
 
@@ -191,11 +192,10 @@ async function cargarEmpleados() {
         const res = await fetch('/api/empleados');
         const data = await res.json();
         todosLosEmpleados = data.reverse(); 
-        aplicarFiltro(); // Aplicar filtro en lugar de renderizar directamente
+        aplicarFiltro(); 
     } catch (error) { console.error(error); }
 }
 
-// Nueva función que se encarga de filtrar la tabla
 function aplicarFiltro() {
     const termino = document.getElementById('inputBuscador').value.toLowerCase();
     
@@ -212,7 +212,6 @@ function renderizarTabla() {
     const tbody = document.getElementById('empleadosBody');
     tbody.innerHTML = ''; 
 
-    // Estado vacío si no hay resultados en la búsqueda
     if (empleadosFiltrados.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -229,7 +228,6 @@ function renderizarTabla() {
         return;
     }
 
-    // Usamos empleadosFiltrados en lugar de todosLosEmpleados
     const indiceInicio = (paginaActual - 1) * empleadosPorPagina;
     const indiceFin = indiceInicio + empleadosPorPagina;
     const empleadosPagina = empleadosFiltrados.slice(indiceInicio, indiceFin);
@@ -267,7 +265,6 @@ function agregarFila(emp) {
 }
 
 function actualizarPaginacion() {
-    // Calculamos el total con los filtrados, no con todos
     const totalEmpleados = empleadosFiltrados.length;
     const totalPaginas = Math.ceil(totalEmpleados / empleadosPorPagina);
     const contenedorPaginacion = document.getElementById('paginacionControles');
