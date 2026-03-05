@@ -25,7 +25,7 @@
                         <th class="p-4">Nombre</th>
                         <th class="p-4">Email</th>
                         <th class="p-4">Cargo</th>
-                        <th class="p-4 text-center">Acciones</th>
+                        <th class="p-4 text-center w-32">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="empleadosBody" class="divide-y divide-slate-200 bg-white">
@@ -33,7 +33,7 @@
                 </tbody>
             </table>
             
-            {{-- CONTROLES DE PAGINACIÓN SIMPLIFICADOS --}}
+            {{-- CONTROLES DE PAGINACIÓN SIMPLIFICADOS (Solo flechas) --}}
             <div id="paginacionControles" class="bg-slate-50 px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6 hidden">
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination" id="paginacionBotones">
-                            {{-- JS genera solo 4 botones aquí --}}
+                            {{-- JS genera los botones aquí --}}
                         </nav>
                     </div>
                 </div>
@@ -55,10 +55,8 @@
     {{-- MODAL OVERLAY --}}
     <div id="modalEmpleado" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity">
         
-        {{-- CAJA DEL MODAL --}}
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden transform transition-all">
             
-            {{-- HEADER DEL MODAL --}}
             <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h3 id="formTitle" class="text-sm font-bold text-indigo-600 uppercase tracking-wide">
                     <i class="fa-solid fa-plus mr-1"></i> Nuevo Empleado
@@ -68,7 +66,6 @@
                 </button>
             </div>
 
-            {{-- FORMULARIO --}}
             <form id="empleadoForm" class="p-6">
                 <input type="hidden" id="editId">
 
@@ -94,14 +91,7 @@
                     </div>
                 </div>
 
-                {{-- FOOTER DEL MODAL (BOTONES) --}}
                 <div class="flex justify-end gap-2 mt-8 pt-4 border-t border-slate-100">
-                    {{-- Botón Eliminar (Solo se muestra al editar) --}}
-                    <button type="button" id="btnModalEliminar" onclick="eliminarDesdeModal()"
-                        class="hidden bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded shadow-sm transition-colors mr-auto">
-                        <i class="fa-solid fa-trash mr-1"></i> Borrar
-                    </button>
-
                     <button type="button" onclick="cerrarModal()"
                         class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded shadow-sm transition-colors">
                         Cancelar
@@ -122,7 +112,7 @@
 let editMode = false;
 let todosLosEmpleados = []; 
 let paginaActual = 1;
-const empleadosPorPagina = 5; // REDUCIDO A 5
+const empleadosPorPagina = 5; // Límite de 5 para que luzca el paginado
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarEmpleados();
@@ -140,14 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData(form);
         const dataObject = Object.fromEntries(formData); 
-        
-        const regexNombre = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/;
-        if (!regexNombre.test(dataObject.nombre) || dataObject.nombre.length > 50) {
-            alert('El nombre es inválido. Recuerda: solo letras, espacios y máximo 50 caracteres.');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            return;
-        }
         
         let url = '/api/empleados';
         let method = 'POST';
@@ -172,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Error en la petición');
 
             await cargarEmpleados(); 
-            cerrarModal(); // Cierra y limpia al guardar con éxito
+            cerrarModal();
 
         } catch (error) {
             console.error(error);
@@ -188,6 +170,7 @@ async function cargarEmpleados() {
     try {
         const res = await fetch('/api/empleados');
         const data = await res.json();
+        // Invertimos para ver los últimos creados primero
         todosLosEmpleados = data.reverse(); 
         renderizarTabla();
     } catch (error) { console.error(error); }
@@ -207,14 +190,11 @@ function renderizarTabla() {
 
 function agregarFila(emp) {
     const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-50 transition-colors cursor-pointer";
+    tr.className = "hover:bg-slate-50 transition-colors";
     
     const nombreEscapado = emp.nombre.replace(/'/g, "\\'");
     const emailEscapado = emp.email.replace(/'/g, "\\'");
     const cargoEscapado = emp.cargo.replace(/'/g, "\\'");
-
-    // Ahora toda la fila es clickeable para abrir el modal de edición rápido
-    tr.onclick = () => prepararEdicion(emp.id, nombreEscapado, emailEscapado, cargoEscapado);
 
     tr.innerHTML = `
         <td class="p-4 font-medium text-slate-900">${emp.nombre}</td>
@@ -222,9 +202,16 @@ function agregarFila(emp) {
         <td class="p-4">
             <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">${emp.cargo}</span>
         </td>
-        <td class="p-4 text-center">
-            <button type="button" class="text-amber-500 hover:text-amber-700 hover:bg-amber-50 p-2 rounded-full transition" title="Editar">
+        <td class="p-4 text-center space-x-2">
+            {{-- BOTÓN EDITAR --}}
+            <button type="button" onclick="prepararEdicion(${emp.id}, '${nombreEscapado}', '${emailEscapado}', '${cargoEscapado}')" 
+                class="text-amber-500 hover:text-amber-700 hover:bg-amber-50 p-2 rounded-full transition" title="Editar">
                 <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            {{-- BOTÓN ELIMINAR --}}
+            <button type="button" onclick="eliminarEmpleado(${emp.id})" 
+                class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
             </button>
         </td>
     `;
@@ -251,7 +238,6 @@ function actualizarPaginacion() {
     document.getElementById('infoFin').innerText = fin;
     document.getElementById('infoTotal').innerText = totalEmpleados;
 
-    // SOLO 4 BOTONES DE NAVEGACIÓN
     const btnPrimero = crearBotonPaginacion('<i class="fa-solid fa-angles-left"></i>', 1, paginaActual === 1, 'primero');
     const btnAnterior = crearBotonPaginacion('<i class="fa-solid fa-chevron-left"></i>', paginaActual > 1 ? paginaActual - 1 : 1, paginaActual === 1, 'medio');
     const btnSiguiente = crearBotonPaginacion('<i class="fa-solid fa-chevron-right"></i>', paginaActual < totalPaginas ? paginaActual + 1 : totalPaginas, paginaActual === totalPaginas, 'medio');
@@ -287,15 +273,13 @@ function crearBotonPaginacion(texto, paginaDestino, deshabilitado = false, posic
     return btn;
 }
 
-// === FUNCIONES DEL MODAL ===
 function abrirModalNuevo() {
-    resetearFormulario(); // Asegura que esté limpio
+    resetearFormulario();
     document.getElementById('modalEmpleado').classList.remove('hidden');
 }
 
 function cerrarModal() {
     document.getElementById('modalEmpleado').classList.add('hidden');
-    resetearFormulario();
 }
 
 function prepararEdicion(id, nombre, email, cargo) {
@@ -305,7 +289,6 @@ function prepararEdicion(id, nombre, email, cargo) {
     document.getElementById('inputEmail').value = email;
     document.getElementById('inputCargo').value = cargo;
 
-    // Cambiar aspecto del modal a "Edición"
     document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square mr-1"></i> Editando Empleado';
     document.getElementById('formTitle').className = "text-sm font-bold text-amber-600 mb-4 uppercase tracking-wide";
 
@@ -313,9 +296,6 @@ function prepararEdicion(id, nombre, email, cargo) {
     btnSubmit.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Actualizar';
     btnSubmit.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
     btnSubmit.classList.add('bg-amber-600', 'hover:bg-amber-700');
-
-    // Mostrar el botón de Eliminar
-    document.getElementById('btnModalEliminar').classList.remove('hidden');
 
     document.getElementById('modalEmpleado').classList.remove('hidden');
 }
@@ -325,7 +305,6 @@ function resetearFormulario() {
     document.getElementById('empleadoForm').reset();
     document.getElementById('editId').value = '';
 
-    // Restaurar aspecto a "Nuevo"
     document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-plus mr-1"></i> Nuevo Empleado';
     document.getElementById('formTitle').className = "text-sm font-bold text-indigo-600 mb-4 uppercase tracking-wide";
 
@@ -333,14 +312,10 @@ function resetearFormulario() {
     btnSubmit.innerHTML = '<i class="fa-solid fa-save mr-2"></i> Guardar';
     btnSubmit.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
     btnSubmit.classList.remove('bg-amber-600', 'hover:bg-amber-700');
-
-    // Ocultar el botón de Eliminar
-    document.getElementById('btnModalEliminar').classList.add('hidden');
 }
 
-async function eliminarDesdeModal() {
-    const id = document.getElementById('editId').value;
-    if(!confirm('¿Estás seguro de eliminar este empleado? Esta acción no se puede deshacer.')) return;
+async function eliminarEmpleado(id) {
+    if(!confirm('¿Estás seguro de eliminar este empleado?')) return;
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     try {
@@ -349,11 +324,11 @@ async function eliminarDesdeModal() {
             headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
         });
         if (res.ok) {
+            // Ajuste de página si el último registro de la página fue eliminado
             if (todosLosEmpleados.length % empleadosPorPagina === 1 && paginaActual > 1) {
                 paginaActual--;
             }
             await cargarEmpleados(); 
-            cerrarModal(); // Cierra el modal tras borrar exitosamente
         }
     } catch (error) { console.error(error); }
 }
