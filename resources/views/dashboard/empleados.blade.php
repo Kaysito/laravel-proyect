@@ -6,34 +6,47 @@
 @section('content')
     <div class="space-y-6 text-left">
         
-        {{-- Encabezado y Botón de Nuevo --}}
-        <div class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-800">Directorio</h2>
-                <p class="text-slate-500 text-sm">Gestiona los empleados de la plataforma.</p>
+        {{-- Encabezado, Botón de Nuevo y Buscador --}}
+        <div class="border-b border-slate-200 pb-5 flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Directorio</h2>
+                    <p class="text-slate-500 text-sm">Gestiona los empleados de la plataforma.</p>
+                </div>
+                <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center whitespace-nowrap">
+                    <i class="fa-solid fa-plus mr-2"></i> Nuevo Empleado
+                </button>
             </div>
-            <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center">
-                <i class="fa-solid fa-plus mr-2"></i> Nuevo Empleado
-            </button>
+            
+            {{-- BARRA DE BÚSQUEDA PRO --}}
+            <div class="relative max-w-md w-full mt-2">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                </div>
+                <input type="text" id="inputBuscador" placeholder="Buscar por nombre, email o cargo..." 
+                    class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all shadow-sm">
+            </div>
         </div>
 
         {{-- TABLA --}}
-        <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm bg-white">
-            <table class="w-full text-left text-sm text-slate-600">
-                <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-xs">
-                    <tr>
-                        <th class="p-4">Nombre</th>
-                        <th class="p-4">Email</th>
-                        <th class="p-4">Cargo</th>
-                        <th class="p-4 text-center w-32">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="empleadosBody" class="divide-y divide-slate-200 bg-white">
-                    {{-- JS llena esto --}}
-                </tbody>
-            </table>
+        <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm bg-white min-h-[300px] flex flex-col">
+            <div class="flex-1">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-xs">
+                        <tr>
+                            <th class="p-4">Nombre</th>
+                            <th class="p-4">Email</th>
+                            <th class="p-4">Cargo</th>
+                            <th class="p-4 text-center w-32">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="empleadosBody" class="divide-y divide-slate-200 bg-white">
+                        {{-- JS llena esto --}}
+                    </tbody>
+                </table>
+            </div>
             
-            {{-- CONTROLES DE PAGINACIÓN SIMPLIFICADOS (Solo flechas) --}}
+            {{-- CONTROLES DE PAGINACIÓN SIMPLIFICADOS --}}
             <div id="paginacionControles" class="bg-slate-50 px-4 py-3 flex items-center justify-between border-t border-slate-200 sm:px-6 hidden">
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
@@ -111,11 +124,18 @@
 <script>
 let editMode = false;
 let todosLosEmpleados = []; 
+let empleadosFiltrados = []; // NUEVO: Array para manejar la búsqueda
 let paginaActual = 1;
-const empleadosPorPagina = 5; // Límite de 5 para que luzca el paginado
+const empleadosPorPagina = 5;
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarEmpleados();
+
+    // Evento del Buscador en tiempo real
+    document.getElementById('inputBuscador').addEventListener('input', () => {
+        paginaActual = 1; // Siempre regresamos a la página 1 al buscar algo nuevo
+        aplicarFiltro();
+    });
 
     const form = document.getElementById('empleadoForm');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -170,19 +190,49 @@ async function cargarEmpleados() {
     try {
         const res = await fetch('/api/empleados');
         const data = await res.json();
-        // Invertimos para ver los últimos creados primero
         todosLosEmpleados = data.reverse(); 
-        renderizarTabla();
+        aplicarFiltro(); // Aplicar filtro en lugar de renderizar directamente
     } catch (error) { console.error(error); }
+}
+
+// Nueva función que se encarga de filtrar la tabla
+function aplicarFiltro() {
+    const termino = document.getElementById('inputBuscador').value.toLowerCase();
+    
+    empleadosFiltrados = todosLosEmpleados.filter(emp => 
+        emp.nombre.toLowerCase().includes(termino) || 
+        emp.email.toLowerCase().includes(termino) || 
+        emp.cargo.toLowerCase().includes(termino)
+    );
+
+    renderizarTabla();
 }
 
 function renderizarTabla() {
     const tbody = document.getElementById('empleadosBody');
     tbody.innerHTML = ''; 
 
+    // Estado vacío si no hay resultados en la búsqueda
+    if (empleadosFiltrados.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="p-8 text-center text-slate-500">
+                    <div class="flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-lg font-medium text-slate-600">No se encontraron resultados</p>
+                        <p class="text-sm">Intenta buscar con otros términos.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        document.getElementById('paginacionControles').classList.add('hidden');
+        return;
+    }
+
+    // Usamos empleadosFiltrados en lugar de todosLosEmpleados
     const indiceInicio = (paginaActual - 1) * empleadosPorPagina;
     const indiceFin = indiceInicio + empleadosPorPagina;
-    const empleadosPagina = todosLosEmpleados.slice(indiceInicio, indiceFin);
+    const empleadosPagina = empleadosFiltrados.slice(indiceInicio, indiceFin);
 
     empleadosPagina.forEach(agregarFila);
     actualizarPaginacion();
@@ -200,15 +250,13 @@ function agregarFila(emp) {
         <td class="p-4 font-medium text-slate-900">${emp.nombre}</td>
         <td class="p-4">${emp.email}</td>
         <td class="p-4">
-            <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">${emp.cargo}</span>
+            <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold whitespace-nowrap">${emp.cargo}</span>
         </td>
-        <td class="p-4 text-center space-x-2">
-            {{-- BOTÓN EDITAR --}}
+        <td class="p-4 text-center space-x-2 whitespace-nowrap">
             <button type="button" onclick="prepararEdicion(${emp.id}, '${nombreEscapado}', '${emailEscapado}', '${cargoEscapado}')" 
                 class="text-amber-500 hover:text-amber-700 hover:bg-amber-50 p-2 rounded-full transition" title="Editar">
                 <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            {{-- BOTÓN ELIMINAR --}}
             <button type="button" onclick="eliminarEmpleado(${emp.id})" 
                 class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition" title="Eliminar">
                 <i class="fa-solid fa-trash"></i>
@@ -219,7 +267,8 @@ function agregarFila(emp) {
 }
 
 function actualizarPaginacion() {
-    const totalEmpleados = todosLosEmpleados.length;
+    // Calculamos el total con los filtrados, no con todos
+    const totalEmpleados = empleadosFiltrados.length;
     const totalPaginas = Math.ceil(totalEmpleados / empleadosPorPagina);
     const contenedorPaginacion = document.getElementById('paginacionControles');
     const botonesContainer = document.getElementById('paginacionBotones');
@@ -324,8 +373,7 @@ async function eliminarEmpleado(id) {
             headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
         });
         if (res.ok) {
-            // Ajuste de página si el último registro de la página fue eliminado
-            if (todosLosEmpleados.length % empleadosPorPagina === 1 && paginaActual > 1) {
+            if (empleadosFiltrados.length % empleadosPorPagina === 1 && paginaActual > 1) {
                 paginaActual--;
             }
             await cargarEmpleados(); 
